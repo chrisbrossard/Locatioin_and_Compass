@@ -1,0 +1,174 @@
+package com.example.locationandcompass.service
+
+import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.os.Build
+import android.os.IBinder
+import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import com.example.locationandcompass.data.AltitudeSample
+import com.example.locationandcompass.data.AltitudeSampleDao
+import com.example.locationandcompass.data.AppDatabase
+import com.example.locationandcompass.data.StepSample
+import com.example.locationandcompass.data.StepSampleDao
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+
+class AltitudeStepsService : Service(), SensorEventListener {
+    private lateinit var sensorManager: SensorManager
+    private var stepSensor: Sensor? = null
+    private var pressureSensor: Sensor? = null
+    var pressureTime = 0L
+    var stepsTime = 0L
+    var startTime = 0L
+    val updateSteps = 0
+    val updateAltitude = 1
+    val notificationId = 1
+    lateinit var manager: NotificationManager
+    lateinit var notification: Notification
+    private lateinit var stepSampleDao: StepSampleDao
+    var startSteps = 0L
+    private lateinit var altitudeSampleDao: AltitudeSampleDao
+    //var sessionIdViewModel = SessionIdViewModel(application)
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    @SuppressLint("MissingPermission")
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        stepSampleDao = AppDatabase.Companion.getInstance(applicationContext).stepSampleDao()
+        altitudeSampleDao = AppDatabase.Companion.getInstance(applicationContext).altitudeSampleDao()
+
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE)
+
+        sensorManager.registerListener(this, stepSensor, SensorManager.SENSOR_DELAY_UI)
+        sensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_UI)
+
+        val channel = NotificationChannel(
+            "location_channel",
+            "Location Tracking",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
+        notification = NotificationCompat.Builder(this, "location_channel")
+            .setContentTitle("Service Active")
+            .build()
+        startForeground(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+
+        return START_STICKY
+    }
+
+    override fun onBind(p0: Intent?): IBinder? {
+        TODO("Not yet implemented")
+    }
+
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
+            //val intent = Intent("com.example.compassandlocation.altitude_steps")
+            //intent.putExtra("type", updateSteps)
+            //intent.putExtra("steps", event.values[0].toLong())
+            //sendBroadcast(intent)
+            val sharedPreferences = getSharedPreferences("my_app", Context.MODE_PRIVATE)
+            val recording = sharedPreferences.getBoolean("step_recording", false)
+            if (!recording) {
+                return
+            }
+
+            val now = System.currentTimeMillis()
+            if (stepsTime == 0L) {
+                stepsTime = now
+            }
+            val normalizedTime = now - stepsTime
+            if (startSteps == 0L) {
+                startSteps = event.values[0].toLong()
+            }
+            val normalizedSteps = event.values[0].toLong() - startSteps
+
+            val sessionId = sharedPreferences.getLong("step_session_id", 0)
+
+            val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            serviceScope.launch {
+                try {
+                    stepSampleDao.insert(
+                        StepSample(
+                            sessionId = sessionId,
+                            time = normalizedTime,
+                            steps = normalizedSteps
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.e("Location and Compass", "step sample insert failed", e)
+                }
+            }
+        } else if (event?.sensor?.type == Sensor.TYPE_PRESSURE) {
+
+            if (pressureTime == 0L) {
+                pressureTime = System.currentTimeMillis()
+            }
+            val now = System.currentTimeMillis()
+            if (now - pressureTime > 5 * 1000) {
+                val sharedPreferences = getSharedPreferences("my_app", Context.MODE_PRIVATE)
+                val recording = sharedPreferences.getBoolean("altitude_recording", false)
+                if (!recording) {
+                    return
+                }
+                pressureTime = now
+                //val intent = Intent("com.example.compassandlocation.altitude_steps")
+                //intent.putExtra("type", updateAltitude)
+                val a = SensorManager.getAltitude(
+                    SensorManager.PRESSURE_STANDARD_ATMOSPHERE,
+                    event.values[0]
+                )
+                /*if (startAltitude == 0) {
+                    startAltitude = a.toInt()
+                }*/
+                //intent.putExtra("altitude", a.toInt()) // - startAltitude)
+                //sendBroadcast(intent)
+                if (startTime == 0L) {
+                    startTime = now
+                }
+
+                val sessionId = sharedPreferences.getLong("altitude_session_id", -1L)
+
+                val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                serviceScope.launch {
+                    try {
+                        altitudeSampleDao.insert(
+                            AltitudeSample(
+                                sessionId = sessionId,
+                                time = now - startTime,
+                                altitude = a
+                            )
+                        )
+                    } catch (e: Exception) {
+                        Log.e("Location and Compass", "altitude sample insert failed", e)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        manager.cancel(notificationId)
+        stopSelf()
+    }
+}
