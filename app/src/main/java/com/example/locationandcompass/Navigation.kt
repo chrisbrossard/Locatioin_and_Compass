@@ -55,10 +55,10 @@ fun Navigation(
     gnssStatus: GnssStatus?,
     magnetometerAccuracy: Int,
     altitudeSlope: Double,
-    sampledAltitudes: ArrayDeque<Int>,
-    stepsDeque: ArrayDeque<Long>,
-    stepsTimesDeque: ArrayDeque<Long>,
-    stepsSpeed: Float,
+    //sampledAltitudes: ArrayDeque<Int>,
+    //stepsDeque: ArrayDeque<Long>,
+    //stepsTimesDeque: ArrayDeque<Long>,
+    //stepsSpeed: Float,
     altitudeSampleDao: AltitudeSampleDao,
     stepSampleDao: StepSampleDao,
     stepSessionDao: StepSessionDao,
@@ -100,9 +100,9 @@ fun Navigation(
                 pressure,
                 azimuth,
                 magnetometerAccuracy,
-                sampledAltitudes,
-                stepsDeque,
-                stepsSpeed,
+                //sampledAltitudes,
+                //stepsDeque,
+                //stepsSpeed,
                 altitudeSampleDao,
                 stepSampleDao,
                 stepSessionDao,
@@ -141,7 +141,7 @@ fun Navigation(
         }
         composable("altitude_profile_recording") {
             AltitudeProfileRecordingScreen(
-                sampledAltitudes,
+                //sampledAltitudes,
                 altitudeListViewModel,
                 altitudeRecordingViewModel,
                 navController,
@@ -150,15 +150,15 @@ fun Navigation(
         }
         composable("altitude_profile_viewing") {
             AltitudeProfileViewingScreen(
-                sampledAltitudes,
+                //sampledAltitudes,
                 altitudeListViewModel,
                 altitudeSessionIdViewModel
             )
         }
         composable("steps_profile_recording") {
             StepsProfileRecordingScreen(
-                stepsDeque,
-                stepsTimesDeque,
+                //stepsDeque,
+                //stepsTimesDeque,
                 stepSampleDao,
                 stepListViewModel,
                 stepRecordingViewModel,
@@ -168,8 +168,8 @@ fun Navigation(
         }
         composable("steps_profile_viewing") {
             StepsProfileViewingScreen(
-                stepsDeque,
-                stepsTimesDeque,
+                //stepsDeque,
+                //stepsTimesDeque,
                 stepSampleDao,
                 stepListViewModel,
                 stepRecordingViewModel,

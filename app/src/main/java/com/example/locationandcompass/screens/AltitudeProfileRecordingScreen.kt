@@ -31,18 +31,17 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 
-@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+//@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun AltitudeProfileRecordingScreen(
-    altitudes: ArrayDeque<Int>,
+    //altitudes: ArrayDeque<Int>,
     altitudeListViewModel: AltitudeListViewModel,
     altitudeRecordingViewModel: AltitudeRecordingViewModel,
     navController: NavHostController,
     altitudeSessionIdViewModel: AltitudeSessionIdViewModel
 ) {
     val rowList by altitudeListViewModel.rowList.collectAsState(initial = emptyList())
-    var clickedText by remember { mutableStateOf("Stop Recording") }
-
+    //var clickedText by remember { mutableStateOf("Stop Recording") }
     //val altitudeViewModel: AltitudeViewModel = viewModel()
     val sessionId = altitudeSessionIdViewModel.getSessionId()
 
@@ -97,7 +96,7 @@ fun AltitudeProfileRecordingScreen(
                                     sample.altitude.toInt().toFloat()
                                 )
                                 if (sample.sessionId == sessionId) {
-                                    entries.addLast(entry)
+                                    entries.add(entry)
                                 }
                             }
                             val dataSet = LineDataSet(entries, "altitudes").apply {

@@ -37,11 +37,11 @@ import com.github.mikephil.charting.data.LineDataSet
 const val MILLISECONDS_PER_SECOND = 1000
 const val SECONDS_PER_MINUTE = 60
 
-@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+//@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun StepsProfileRecordingScreen(
-    steps: ArrayDeque<Long>,
-    stepsTimes: ArrayDeque<Long>,
+    //steps: ArrayDeque<Long>,
+    //stepsTimes: ArrayDeque<Long>,
     stepSampleDao: StepSampleDao,
     stepListViewModel: StepListViewModel,
     stepRecordingViewModel: StepRecordingViewModel,
@@ -50,7 +50,7 @@ fun StepsProfileRecordingScreen(
 ) {
     //val viewModel: MainActivity.StepListViewModel = viewModel()
     val rowList by stepListViewModel.rowList.collectAsState(initial = emptyList())
-    var clickedText by remember { mutableStateOf("Stop Recording") }
+    //var clickedText by remember { mutableStateOf("Stop Recording") }
     val sessionId = stepSessionIdViewModel.getSessionId()
 
     BackHandler(enabled = true) {
@@ -107,7 +107,7 @@ fun StepsProfileRecordingScreen(
                                     sample.steps.toFloat()
                                 )
                                 if (sessionId == sample.sessionId) {
-                                    entries.addLast(entry)
+                                    entries.add(entry)
                                 }
                             }
                             val dataSet = LineDataSet(entries, "set").apply {

@@ -92,9 +92,9 @@ fun OverviewScreen(
     pressure: Float,
     azimuth: Float,
     magnetometerAccuracy: Int,
-    altitudes: ArrayDeque<Int>,
-    stepsDeque: ArrayDeque<Long>,
-    stepsSpeed: Float,
+    //altitudes: ArrayDeque<Int>,
+    //stepsDeque: ArrayDeque<Long>,
+    //stepsSpeed: Float,
     altitudeSampleDao: AltitudeSampleDao,
     stepSampleDao: StepSampleDao,
     stepSessionDao: StepSessionDao,
@@ -278,7 +278,7 @@ fun OverviewScreen(
             // first row
             Box(
                 modifier = Modifier
-                    .weight(0.6f)
+                    .weight(0.5f)
                     .background(grey),
                 contentAlignment = Alignment.Center
             ) {
@@ -304,11 +304,6 @@ fun OverviewScreen(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            /*var s = "0"
-                        if (!stepsDeque.isEmpty()) {
-                            s = stepsDeque.last().toString()
-                        }
-                        s = steps.toString()*/
                             BasicText(
                                 modifier = Modifier
                                     .clickable {
@@ -330,27 +325,13 @@ fun OverviewScreen(
                                         stepRecordingViewModel.updateRecording(true)
                                         navController.navigate("steps_profile_recording")
                                     },
-                                text = stepRowCount.toString(),
+                                text = steps.toString(),
                                 maxLines = 1,
                                 autoSize = TextAutoSize.StepBased(),
                             )
                             Text("Steps")
+                            Text("Tap to Record")
                         }
-                        /*Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        val s = String.format(Locale.US, "%.1f", stepsSpeed)
-                        BasicText(
-                            modifier = Modifier
-                                .clickable {
-                                    //navController.navigate("steps_profile")
-                                },
-                            text = s,
-                            maxLines = 1,
-                            autoSize = TextAutoSize.StepBased(),
-                        )
-                        Text("Step Speed steps/s")
-                    }*/
                     }
                     // vertical speed
                     Box(
@@ -394,7 +375,7 @@ fun OverviewScreen(
             // second row
             Box(
                 modifier = Modifier
-                    .weight(0.4f)
+                    .weight(0.5f)
                     .background(grey)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -455,6 +436,7 @@ fun OverviewScreen(
                                 autoSize = TextAutoSize.StepBased()
                             )
                             Text("Baro Altitude m")
+                            Text("Tap to Record")
                         }
                     }
                     // Sun/Moon
@@ -696,3 +678,19 @@ fun OverviewScreen(
 
         }
     }*/
+
+/*Column(
+horizontalAlignment = Alignment.CenterHorizontally
+) {
+val s = String.format(Locale.US, "%.1f", stepsSpeed)
+BasicText(
+    modifier = Modifier
+        .clickable {
+            //navController.navigate("steps_profile")
+        },
+    text = s,
+    maxLines = 1,
+    autoSize = TextAutoSize.StepBased(),
+)
+Text("Step Speed steps/s")
+}*/

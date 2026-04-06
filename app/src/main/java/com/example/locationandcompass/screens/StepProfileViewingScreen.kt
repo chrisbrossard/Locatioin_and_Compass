@@ -23,11 +23,11 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 
-@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+//@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun StepsProfileViewingScreen(
-    steps: ArrayDeque<Long>,
-    stepsTimes: ArrayDeque<Long>,
+    //steps: ArrayDeque<Long>,
+    //stepsTimes: ArrayDeque<Long>,
     stepSampleDao: StepSampleDao,
     stepListViewModel: StepListViewModel,
     stepRecordingViewModel: StepRecordingViewModel,
@@ -71,7 +71,7 @@ fun StepsProfileViewingScreen(
                                     sample.steps.toFloat()
                                 )
                                 if (sample.sessionId == sessionId) {
-                                    entries.addLast(entry)
+                                    entries.add(entry)
                                 }
                             }
                             val dataSet = LineDataSet(entries, "set").apply {

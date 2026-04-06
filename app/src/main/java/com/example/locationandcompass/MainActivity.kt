@@ -121,10 +121,10 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         mutableGnssStatus,
                         magnetometerAccuracy.intValue,
                         altitudeSlope.doubleValue,
-                        sampledAltitudeDeque,
-                        stepsDeque,
-                        stepsTimesDeque,
-                        stepsSlope.floatValue,
+                        //sampledAltitudeDeque,
+                        //stepsDeque,
+                        //stepsTimesDeque,
+                        //stepsSlope.floatValue,
                         altitudeSampleDao,
                         stepSampleDao,
                         stepSessionDao,
@@ -167,16 +167,19 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     val magneticX = FloatArray(arraySize)
     val magneticY = FloatArray(arraySize)
     val magneticZ = FloatArray(arraySize)
+
     val altitudeDeque = ArrayDeque<Float>()
+
     val altitudeTimeDeque = ArrayDeque<Long>()
     val smoothedAltitudeDeque = ArrayDeque<Float>()
-    val sampledAltitudeDeque = ArrayDeque<Int>()
-    val stepsDeque = ArrayDeque<Long>()
-    val stepsTimesDeque = ArrayDeque<Long>()
+    //val sampledAltitudeDeque = ArrayDeque<Int>()
+    //val stepsDeque = ArrayDeque<Long>()
+    //val stepsTimesDeque = ArrayDeque<Long>()
+
     //var stepsStartMillis = 0L
     var altitudeStartTime = 0L
     val altitudeSlope = mutableDoubleStateOf(0.0)
-    val stepsSlope = mutableFloatStateOf(0f)
+    //val stepsSlope = mutableFloatStateOf(0f)
     private var pressureSensor: Sensor? = null
     private var stepSensor: Sensor? = null
     private var locationManager: LocationManager? = null
@@ -260,20 +263,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             }
         }
 
-/*        database = Room
-            .databaseBuilder(
-                applicationContext,
-                AppDatabase::class.java,
-                "app-database"
-            )
-            .allowMainThreadQueries()
-            .build()
-*/
-        /*registerReceiver(
-            altitudeStepsReceiver,
-            IntentFilter("com.example.compassandlocation.altitude_steps"),
-            RECEIVER_EXPORTED
-        )*/
+
     }
 
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -324,10 +314,10 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         mutableGnssStatus,
                         magnetometerAccuracy.intValue,
                         altitudeSlope.doubleValue,
-                        sampledAltitudeDeque,
-                        stepsDeque,
-                        stepsTimesDeque,
-                        stepsSlope.floatValue,
+                        //sampledAltitudeDeque,
+                        //stepsDeque,
+                        //stepsTimesDeque,
+                        //stepsSlope.floatValue,
                         altitudeSampleDao,
                         stepSampleDao,
                         stepSessionDao,
@@ -428,11 +418,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
+
         if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
             if (startSteps == 0L) {
                 startSteps = event.values[0].toLong()
             }
-
+            steps.intValue = (event.values[0].toLong() - startSteps).toInt()
         }
         if (event?.sensor?.type == Sensor.TYPE_PRESSURE) {
             pressure.floatValue = event.values[0]
@@ -839,3 +830,18 @@ startSteps: Int
         }
     }
 }*/
+
+/*        database = Room
+            .databaseBuilder(
+                applicationContext,
+                AppDatabase::class.java,
+                "app-database"
+            )
+            .allowMainThreadQueries()
+            .build()
+*/
+/*registerReceiver(
+    altitudeStepsReceiver,
+    IntentFilter("com.example.compassandlocation.altitude_steps"),
+    RECEIVER_EXPORTED
+)*/

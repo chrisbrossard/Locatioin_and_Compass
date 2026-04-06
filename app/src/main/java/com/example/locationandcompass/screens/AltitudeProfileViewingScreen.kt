@@ -20,17 +20,17 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 
-@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+//@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @Composable
 fun AltitudeProfileViewingScreen(
-    altitudes: ArrayDeque<Int>,
+    //altitudes: ArrayDeque<Int>,
     altitudeListViewModel: AltitudeListViewModel,
     altitudeSessionIdViewModel: AltitudeSessionIdViewModel
 ) {
     val rowList by altitudeListViewModel.rowList.collectAsState(initial = emptyList())
-
     val sessionId = altitudeSessionIdViewModel.getSessionId()
     //val altitudeViewModel: AltitudeViewModel = viewModel()
+
     Column {
         Box(
             Modifier
@@ -61,7 +61,7 @@ fun AltitudeProfileViewingScreen(
                             val entry = Entry(sample.time.toFloat() / (1000 * 60),
                                 sample.altitude.toInt().toFloat())
                             if (sample.sessionId == sessionId) {
-                                entries.addLast(entry)
+                                entries.add(entry)
                             }
                         }
                         val dataSet = LineDataSet(entries, "altitudes").apply {

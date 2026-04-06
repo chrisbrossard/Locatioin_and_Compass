@@ -124,7 +124,7 @@ class AltitudeStepsService : Service(), SensorEventListener {
                 pressureTime = System.currentTimeMillis()
             }
             val now = System.currentTimeMillis()
-            if (now - pressureTime > 5 * 1000) {
+            if (now - pressureTime > 60 * 1000) {
                 val sharedPreferences = getSharedPreferences("my_app", Context.MODE_PRIVATE)
                 val recording = sharedPreferences.getBoolean("altitude_recording", false)
                 if (!recording) {
