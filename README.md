@@ -8,4 +8,4 @@ If you have problems running the app, I can be contacted at chrisbrossard@outloo
 
 The project is maintained by Chris Brossard.
 
-<img width="720" height="1600" alt="Screenshot_20260405-143642" src="https://github.com/user-attachments/assets/32f48d8c-99df-42d3-a776-952fca8465f2" />
+<img width="180" height="400" alt="Screenshot_20260406-110656" src="https://github.com/user-attachments/assets/b15f8a44-db7c-4965-8c95-64be66c6962e" />
