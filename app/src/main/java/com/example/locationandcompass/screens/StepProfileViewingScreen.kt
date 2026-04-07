@@ -64,7 +64,14 @@ fun StepsProfileViewingScreen(
                             }*/
                             //val samples = stepSampleDao.getAll()
                             val entries = ArrayList<Entry>()
-                            if (rowList.isNotEmpty()) {
+                            var flag = false
+                            for (sample in rowList) {
+                                if (sessionId == sample.sessionId) {
+                                    flag = true
+                                    break
+                                }
+                            }
+                            if (flag) {
                                 for (sample in rowList) { //samples) {
                                     val entry = Entry(
                                         sample.time.toFloat() /
