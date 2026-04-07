@@ -159,7 +159,7 @@ fun Navigation(
             StepsProfileRecordingScreen(
                 //stepsDeque,
                 //stepsTimesDeque,
-                stepSampleDao,
+                //stepSampleDao,
                 stepListViewModel,
                 stepRecordingViewModel,
                 navController,
@@ -170,9 +170,9 @@ fun Navigation(
             StepsProfileViewingScreen(
                 //stepsDeque,
                 //stepsTimesDeque,
-                stepSampleDao,
+                //stepSampleDao,
                 stepListViewModel,
-                stepRecordingViewModel,
+                //stepRecordingViewModel,
                 stepSessionIdViewModel
             )
         }

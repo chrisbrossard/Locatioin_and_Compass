@@ -1,21 +1,13 @@
 package com.example.locationandcompass.screens
 
 import android.graphics.Typeface
-import android.os.Build
 import androidx.activity.compose.BackHandler
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -23,8 +15,6 @@ import androidx.navigation.NavHostController
 import com.example.locationandcompass.viewmodel.AltitudeListViewModel
 import com.example.locationandcompass.viewmodel.AltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
-import com.example.locationandcompass.viewmodel.StepRecordingViewModel
-import com.example.locationandcompass.viewmodel.StepSessionIdViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.data.Entry
@@ -62,9 +52,7 @@ fun AltitudeProfileRecordingScreen(
             }
         }
     ) { innerPadding ->*/
-        Column(
-            //modifier = Modifier.padding(innerPadding)
-        ) {
+        Column {
             Box(
                 Modifier
                     .weight(0.1f)

@@ -1,9 +1,6 @@
 package com.example.locationandcompass.screens
 
 import android.graphics.Typeface
-import android.os.Build
-import androidx.activity.compose.BackHandler
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,9 +25,9 @@ import com.github.mikephil.charting.data.LineDataSet
 fun StepsProfileViewingScreen(
     //steps: ArrayDeque<Long>,
     //stepsTimes: ArrayDeque<Long>,
-    stepSampleDao: StepSampleDao,
+    //stepSampleDao: StepSampleDao,
     stepListViewModel: StepListViewModel,
-    stepRecordingViewModel: StepRecordingViewModel,
+    //stepRecordingViewModel: StepRecordingViewModel,
     stepSessionIdViewModel: StepSessionIdViewModel
 ) {
     //val viewModel: MainActivity.StepListViewModel = viewModel()
