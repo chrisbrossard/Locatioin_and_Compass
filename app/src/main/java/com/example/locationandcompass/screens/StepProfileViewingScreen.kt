@@ -10,8 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.locationandcompass.data.StepSampleDao
-import com.example.locationandcompass.viewmodel.StepRecordingViewModel
 import com.example.locationandcompass.viewmodel.StepListViewModel
 import com.example.locationandcompass.viewmodel.StepSessionIdViewModel
 import com.github.mikephil.charting.charts.LineChart

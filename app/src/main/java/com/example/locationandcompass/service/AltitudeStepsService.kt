@@ -34,8 +34,8 @@ class AltitudeStepsService : Service(), SensorEventListener {
     var pressureTime = 0L
     var stepsTime = 0L
     var startTime = 0L
-    val updateSteps = 0
-    val updateAltitude = 1
+    //val updateSteps = 0
+    //val updateAltitude = 1
     val notificationId = 1
     lateinit var manager: NotificationManager
     lateinit var notification: Notification
@@ -47,8 +47,8 @@ class AltitudeStepsService : Service(), SensorEventListener {
     @RequiresApi(Build.VERSION_CODES.Q)
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        stepSampleDao = AppDatabase.Companion.getInstance(applicationContext).stepSampleDao()
-        altitudeSampleDao = AppDatabase.Companion.getInstance(applicationContext).altitudeSampleDao()
+        stepSampleDao = AppDatabase.getInstance(applicationContext).stepSampleDao()
+        altitudeSampleDao = AppDatabase.getInstance(applicationContext).altitudeSampleDao()
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
@@ -86,7 +86,7 @@ class AltitudeStepsService : Service(), SensorEventListener {
             //intent.putExtra("type", updateSteps)
             //intent.putExtra("steps", event.values[0].toLong())
             //sendBroadcast(intent)
-            val sharedPreferences = getSharedPreferences("my_app", Context.MODE_PRIVATE)
+            val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
             val recording = sharedPreferences.getBoolean("step_recording", false)
             if (!recording) {
                 return
@@ -125,7 +125,7 @@ class AltitudeStepsService : Service(), SensorEventListener {
             }
             val now = System.currentTimeMillis()
             if (now - pressureTime > 5 * 1000) {
-                val sharedPreferences = getSharedPreferences("my_app", Context.MODE_PRIVATE)
+                val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
                 val recording = sharedPreferences.getBoolean("altitude_recording", false)
                 if (!recording) {
                     return
