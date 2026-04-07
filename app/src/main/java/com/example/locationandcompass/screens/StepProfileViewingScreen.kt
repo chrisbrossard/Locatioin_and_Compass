@@ -64,44 +64,46 @@ fun StepsProfileViewingScreen(
                             }*/
                             //val samples = stepSampleDao.getAll()
                             val entries = ArrayList<Entry>()
-                            for (sample in rowList) { //samples) {
-                                val entry = Entry(
-                                    sample.time.toFloat() /
-                                            (MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE),
-                                    sample.steps.toFloat()
-                                )
-                                if (sample.sessionId == sessionId) {
-                                    entries.add(entry)
+                            if (rowList.isNotEmpty()) {
+                                for (sample in rowList) { //samples) {
+                                    val entry = Entry(
+                                        sample.time.toFloat() /
+                                                (MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE),
+                                        sample.steps.toFloat()
+                                    )
+                                    if (sample.sessionId == sessionId) {
+                                        entries.add(entry)
+                                    }
                                 }
-                            }
-                            val dataSet = LineDataSet(entries, "set").apply {
-                            }
-                            dataSet.mode = LineDataSet.Mode.LINEAR
-                            dataSet.label = "Steps"
-                            dataSet.setDrawFilled(true)
-                            dataSet.fillColor = 0x964B00
-                            dataSet.fillAlpha = 128
-                            dataSet.setDrawCircles(false)
-                            dataSet.setDrawValues(false)
-                            chart.data = LineData(dataSet)
-                            chart.setScaleEnabled(true)
-                            val description = Description()
-                            description.text = "Steps Profile"
-                            chart.description = description
-                            /*chart.zoom(
+                                val dataSet = LineDataSet(entries, "set").apply {
+                                }
+                                dataSet.mode = LineDataSet.Mode.LINEAR
+                                dataSet.label = "Steps"
+                                dataSet.setDrawFilled(true)
+                                dataSet.fillColor = 0x964B00
+                                dataSet.fillAlpha = 128
+                                dataSet.setDrawCircles(false)
+                                dataSet.setDrawValues(false)
+                                chart.data = LineData(dataSet)
+                                chart.setScaleEnabled(true)
+                                val description = Description()
+                                description.text = "Steps Profile"
+                                chart.description = description
+                                /*chart.zoom(
                                 1 / stepsTimes.size.toFloat(),
                                 1f,
                                 stepsTimes.last().toFloat(),
                                 steps.last().toFloat(),
                                 YAxis.AxisDependency.RIGHT
                             )*/
-                            chart.xAxis.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-                            chart.axisLeft.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-                            chart.axisRight.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-                            chart.legend.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-                            chart.description.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-                            chart.invalidate()
-                            //}
+                                chart.xAxis.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
+                                chart.axisLeft.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
+                                chart.axisRight.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
+                                chart.legend.typeface = Typeface.defaultFromStyle(Typeface.BOLD)
+                                chart.description.typeface =
+                                    Typeface.defaultFromStyle(Typeface.BOLD)
+                                chart.invalidate()
+                            }
                         }
                     )
                 }
