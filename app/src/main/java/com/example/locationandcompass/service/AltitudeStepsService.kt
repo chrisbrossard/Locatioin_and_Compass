@@ -16,6 +16,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.example.locationandcompass.MainActivity.Recording
 import com.example.locationandcompass.data.AltitudeSample
 import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AppDatabase
@@ -25,14 +26,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 
 class AltitudeStepsService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var stepSensor: Sensor? = null
     private var pressureSensor: Sensor? = null
-    var pressureTime = 0L
+    var periodicStartTime = 0L
     var stepsTime = 0L
     var startTime = 0L
+    var periodStartTime = 0L
     //val updateSteps = 0
     //val updateAltitude = 1
     val notificationId = 1
@@ -81,10 +84,7 @@ class AltitudeStepsService : Service(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
-            //val intent = Intent("com.example.compassandlocation.altitude_steps")
-            //intent.putExtra("type", updateSteps)
-            //intent.putExtra("steps", event.values[0].toLong())
-            //sendBroadcast(intent)
+
             val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
             val recording = sharedPreferences.getBoolean("step_recording", false)
             if (!recording) {
@@ -118,35 +118,29 @@ class AltitudeStepsService : Service(), SensorEventListener {
                 }
             }
         } else if (event?.sensor?.type == Sensor.TYPE_PRESSURE) {
+            val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
+            val recording = sharedPreferences.getInt(
+                "altitude_recording",
+                Recording.OFF.ordinal
+            )
+            val sessionId = sharedPreferences.getLong("altitude_session_id", -1L)
 
-            if (pressureTime == 0L) {
-                pressureTime = System.currentTimeMillis()
+            if (recording == Recording.OFF.ordinal) {
+                return
             }
+
             val now = System.currentTimeMillis()
-            if (now - pressureTime > 5 * 1000) {
-                val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
-                val recording = sharedPreferences.getBoolean("altitude_recording", false)
-                if (!recording) {
-                    return
-                }
-                pressureTime = now
-                //val intent = Intent("com.example.compassandlocation.altitude_steps")
-                //intent.putExtra("type", updateAltitude)
+            if (recording == Recording.STARTING.ordinal) {
+                startTime = now
+                periodStartTime = now
+            }
+            if (now - periodStartTime > 5 * 1000) {
+                periodStartTime = now
+
                 val a = SensorManager.getAltitude(
                     SensorManager.PRESSURE_STANDARD_ATMOSPHERE,
                     event.values[0]
                 )
-                /*if (startAltitude == 0) {
-                    startAltitude = a.toInt()
-                }*/
-                //intent.putExtra("altitude", a.toInt()) // - startAltitude)
-                //sendBroadcast(intent)
-                if (startTime == 0L) {
-                    startTime = now
-                }
-
-                val sessionId = sharedPreferences.getLong("altitude_session_id", -1L)
-
                 val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
                 serviceScope.launch {
                     try {
@@ -162,6 +156,11 @@ class AltitudeStepsService : Service(), SensorEventListener {
                     }
                 }
             }
+            if (recording == Recording.STARTING.ordinal) {
+                sharedPreferences.edit {
+                    putInt("altitude_recording", Recording.ON.ordinal)
+                }
+            }
         }
     }
 
@@ -171,3 +170,17 @@ class AltitudeStepsService : Service(), SensorEventListener {
         stopSelf()
     }
 }
+
+//val intent = Intent("com.example.compassandlocation.altitude_steps")
+//intent.putExtra("type", updateSteps)
+//intent.putExtra("steps", event.values[0].toLong())
+//sendBroadcast(intent)
+
+//val intent = Intent("com.example.compassandlocation.altitude_steps")
+//intent.putExtra("type", updateAltitude)
+//intent.putExtra("altitude", a.toInt()) // - startAltitude)
+//sendBroadcast(intent)
+
+/*if (startAltitude == 0) {
+    startAltitude = a.toInt()
+}*/

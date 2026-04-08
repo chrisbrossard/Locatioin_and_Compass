@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.location.GnssStatus
 import android.location.Location
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -12,9 +13,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AltitudeSessionDao
 import com.example.locationandcompass.data.StepSampleDao
@@ -34,6 +35,8 @@ import com.example.locationandcompass.viewmodel.AltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionCountViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionListViewModel
+import com.example.locationandcompass.viewmodel.HeadingViewModel
+import com.example.locationandcompass.viewmodel.PressureViewModel
 import com.example.locationandcompass.viewmodel.StepRecordingViewModel
 import com.example.locationandcompass.viewmodel.StepSessionCountViewModel
 import com.example.locationandcompass.viewmodel.StepSessionIdViewModel
@@ -41,6 +44,8 @@ import com.example.locationandcompass.viewmodel.StepSessionListViewModel
 import com.example.locationandcompass.viewmodel.StepCountViewModel
 import com.example.locationandcompass.viewmodel.StepDeleteViewModel
 import com.example.locationandcompass.viewmodel.StepListViewModel
+import com.example.locationandcompass.viewmodel.StepViewModel
+import com.example.locationandcompass.viewmodel.VerticalSpeedViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import kotlin.time.ExperimentalTime
 
@@ -50,11 +55,11 @@ import kotlin.time.ExperimentalTime
 @Composable
 fun Navigation(
     client: FusedLocationProviderClient,
-    azimuth: Float,
-    pressure: Float,
+    //azimuth: Float,
+    //pressure: Float,
     gnssStatus: GnssStatus?,
     magnetometerAccuracy: Int,
-    altitudeSlope: Double,
+    //altitudeSlope: Double,
     //sampledAltitudes: ArrayDeque<Int>,
     //stepsDeque: ArrayDeque<Long>,
     //stepsTimesDeque: ArrayDeque<Long>,
@@ -63,7 +68,7 @@ fun Navigation(
     stepSampleDao: StepSampleDao,
     stepSessionDao: StepSessionDao,
     altitudeSessionDao: AltitudeSessionDao,
-    steps: Int,
+    //steps: Int,
     stepCountViewModel: StepCountViewModel,
     stepListViewModel: StepListViewModel,
     stepSessionCountViewModel: StepSessionCountViewModel,
@@ -76,10 +81,16 @@ fun Navigation(
     altitudeSessionListViewModel: AltitudeSessionListViewModel,
     altitudeSessionIdViewModel: AltitudeSessionIdViewModel,
     altitudeRecordingViewModel: AltitudeRecordingViewModel,
-    altitudeDeleteViewModel: AltitudeDeleteViewModel
+    altitudeDeleteViewModel: AltitudeDeleteViewModel,
+    navController: NavHostController,
+    headingViewModel: HeadingViewModel,
+    stepViewModel: StepViewModel,
+    verticalSpeedViewModel: VerticalSpeedViewModel,
+    pressureViewModel: PressureViewModel
 ) {
-    val navController = rememberNavController()
     var location1 by remember { mutableStateOf(Location("")) }
+
+    Log.d("Location and Compass", "Navigation() called")
 
     LaunchedEffect(Unit) {
         requestCurrentLocation(
@@ -96,9 +107,9 @@ fun Navigation(
             OverviewScreen(
                 client,
                 navController,
-                altitudeSlope,
-                pressure,
-                azimuth,
+                //altitudeSlope,
+                //pressure,
+                //azimuth,
                 magnetometerAccuracy,
                 //sampledAltitudes,
                 //stepsDeque,
@@ -107,7 +118,7 @@ fun Navigation(
                 stepSampleDao,
                 stepSessionDao,
                 altitudeSessionDao,
-                steps,
+                //steps,
                 stepCountViewModel,
                 stepListViewModel,
                 stepSessionCountViewModel,
@@ -120,7 +131,13 @@ fun Navigation(
                 altitudeSessionListViewModel,
                 altitudeSessionIdViewModel,
                 altitudeRecordingViewModel,
-                altitudeDeleteViewModel
+                altitudeDeleteViewModel,
+                onNavigateToAltitudeRecording = {
+                    navController.navigate("altitude_profile_recording") },
+                headingViewModel = headingViewModel,
+                stepViewModel = stepViewModel,
+                verticalSpeedViewModel = verticalSpeedViewModel,
+                pressureViewModel = pressureViewModel
             )
         }
         composable("sun_moon") {
@@ -132,8 +149,9 @@ fun Navigation(
             CompassScreen(
                 navController,
                 location1,
-                azimuth,
-                magnetometerAccuracy
+                //azimuth,
+                magnetometerAccuracy,
+                headingViewModel
             )
         }
         composable("gnss") {
@@ -177,7 +195,13 @@ fun Navigation(
             )
         }
         composable("vertical_speed") {
-            VerticalSpeedScreen(altitudeSlope)
+            VerticalSpeedScreen(
+                //altitudeSlope,
+                verticalSpeedViewModel)
         }
+    }
+
+    fun onNavigateToAltitudeRecording() {
+        navController.navigate("apr")
     }
 }

@@ -4,6 +4,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -16,9 +18,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import com.example.locationandcompass.R
+import com.example.locationandcompass.viewmodel.VerticalSpeedViewModel
 
 @Composable
-fun VerticalSpeedScreen(altitudeSlope: Double) {
+fun VerticalSpeedScreen(
+    //altitudeSlope: Double,
+    verticalSpeedViewModel: VerticalSpeedViewModel
+) {
+    val verticalSpeed by verticalSpeedViewModel.verticalSpeed.collectAsState()
+
     Box {
         val style = TextStyle()
         val measuredText = rememberTextMeasurer().measure(
@@ -101,8 +109,8 @@ fun VerticalSpeedScreen(altitudeSlope: Double) {
 
             var angle = 0f
 
-            if (altitudeSlope * 1000 >= -4 && altitudeSlope * 1000 <= 4) {
-                angle = altitudeSlope.toFloat() * 1000 * 180 / 4
+            if (verticalSpeed * 1000 >= -4 && verticalSpeed * 1000 <= 4) {
+                angle = verticalSpeed * 1000 * 180 / 4
             }
             rotate(angle) {
                 drawLine(

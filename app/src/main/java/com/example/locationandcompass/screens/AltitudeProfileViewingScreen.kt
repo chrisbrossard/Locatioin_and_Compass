@@ -64,7 +64,7 @@ fun AltitudeProfileViewingScreen(
                     if (flag) {
                         for (sample in rowList) { //samples) {
                             val entry = Entry(sample.time.toFloat() / (1000 * 60),
-                                sample.altitude.toInt().toFloat())
+                                sample.altitude)
                             if (sample.sessionId == sessionId) {
                                 entries.add(entry)
                             }

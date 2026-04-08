@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -29,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentSanitizer
+import androidx.navigation.compose.rememberNavController
 import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AltitudeSessionDao
 import com.example.locationandcompass.data.AppDatabase
@@ -43,18 +45,22 @@ import com.example.locationandcompass.viewmodel.AltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionCountViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionListViewModel
-import com.example.locationandcompass.viewmodel.StepSessionCountViewModel
+import com.example.locationandcompass.viewmodel.PressureViewModel
+import com.example.locationandcompass.viewmodel.HeadingViewModel
 import com.example.locationandcompass.viewmodel.StepCountViewModel
 import com.example.locationandcompass.viewmodel.StepDeleteViewModel
 import com.example.locationandcompass.viewmodel.StepListViewModel
+import com.example.locationandcompass.viewmodel.StepRecordingViewModel
+import com.example.locationandcompass.viewmodel.StepSessionCountViewModel
+import com.example.locationandcompass.viewmodel.StepSessionIdViewModel
+import com.example.locationandcompass.viewmodel.StepSessionListViewModel
+import com.example.locationandcompass.viewmodel.StepViewModel
+import com.example.locationandcompass.viewmodel.VerticalSpeedViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlin.time.ExperimentalTime
-import com.example.locationandcompass.viewmodel.StepRecordingViewModel
-import com.example.locationandcompass.viewmodel.StepSessionIdViewModel
-import com.example.locationandcompass.viewmodel.StepSessionListViewModel
 
 class MainActivity : ComponentActivity(), SensorEventListener {
     val fusedLocationProviderClient: FusedLocationProviderClient by lazy {
@@ -113,14 +119,15 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             }
 
             setContent {
+                val navController = rememberNavController()
                 LocationAndCompassTheme {
                     Navigation(
                         client = fusedLocationProviderClient,
-                        azimuth.floatValue,
-                        pressure.floatValue,
+                        //azimuth.floatValue,
+                        //pressure.floatValue,
                         mutableGnssStatus,
                         magnetometerAccuracy.intValue,
-                        altitudeSlope.doubleValue,
+                        //altitudeSlope.doubleValue,
                         //sampledAltitudeDeque,
                         //stepsDeque,
                         //stepsTimesDeque,
@@ -129,7 +136,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         stepSampleDao,
                         stepSessionDao,
                         altitudeSessionDao,
-                        steps.intValue,
+                        //steps.intValue,
                         stepCountViewModel,
                         stepListViewModel,
                         stepSessionCountViewModel,
@@ -142,7 +149,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         altitudeSessionListViewModel,
                         altitudeSessionIdViewModel,
                         altitudeRecordingViewModel,
-                        altitudeDeleteViewModel
+                        altitudeDeleteViewModel,
+                        navController,
+                        headingViewModel,
+                        stepViewModel,
+                        verticalSpeedViewModel,
+                        pressureViewModel
                     )
                 }
             }
@@ -212,10 +224,20 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     lateinit var stepRecordingViewModel: StepRecordingViewModel
     lateinit var altitudeRecordingViewModel: AltitudeRecordingViewModel
+    enum class Recording {
+        OFF, STARTING, ON
+    }
+    private val headingViewModel: HeadingViewModel by viewModels()
+    private val stepViewModel: StepViewModel by viewModels()
+    private val verticalSpeedViewModel: VerticalSpeedViewModel by viewModels()
+    private val pressureViewModel: PressureViewModel by viewModels()
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+        Log.d("Location and Compass", "OnCreate called")
 
         database = AppDatabase.getInstance(this)
 
@@ -263,14 +285,6 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             }
         }
 
-
-    }
-
-    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
-    override fun onStart() {
-        super.onStart()
-        Log.d("Location and Compass", "onStart() called ")
-
         var granted = true
 
         val permissions = arrayOf(
@@ -306,14 +320,15 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             requestPermissionLauncher.launch(permissions)
         } else {
             setContent {
+                val navController = rememberNavController()
                 LocationAndCompassTheme {
                     Navigation(
                         client = fusedLocationProviderClient,
-                        azimuth.floatValue,
-                        pressure.floatValue,
+                        //azimuth.floatValue,
+                        //pressure.floatValue,
                         mutableGnssStatus,
                         magnetometerAccuracy.intValue,
-                        altitudeSlope.doubleValue,
+                        //altitudeSlope.doubleValue,
                         //sampledAltitudeDeque,
                         //stepsDeque,
                         //stepsTimesDeque,
@@ -322,7 +337,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         stepSampleDao,
                         stepSessionDao,
                         altitudeSessionDao,
-                        steps.intValue,
+                        //steps.intValue,
                         stepCountViewModel,
                         stepListViewModel,
                         stepSessionCountViewModel,
@@ -335,10 +350,16 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         altitudeSessionListViewModel,
                         altitudeSessionIdViewModel,
                         altitudeRecordingViewModel,
-                        altitudeDeleteViewModel
+                        altitudeDeleteViewModel,
+                        navController,
+                        headingViewModel,
+                        stepViewModel,
+                        verticalSpeedViewModel,
+                        pressureViewModel
                     )
                 }
             }
+
             intent = Intent(this, AltitudeStepsService::class.java)
             val safeIntent = IntentSanitizer.Builder()
                 .allowAnyComponent()
@@ -348,6 +369,17 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 }
             ContextCompat.startForegroundService(this, safeIntent)
         }
+
+
+        }
+
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+    override fun onStart() {
+        super.onStart()
+        Log.d("Location and Compass", "onStart() called ")
+
+
+
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -423,10 +455,13 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             if (startSteps == 0L) {
                 startSteps = event.values[0].toLong()
             }
-            steps.intValue = (event.values[0].toLong() - startSteps).toInt()
+            //steps.intValue = (event.values[0].toLong() - startSteps).toInt()
+            stepViewModel.updateSteps(
+                ((event.values[0].toLong() - startSteps).toFloat()))
         }
         if (event?.sensor?.type == Sensor.TYPE_PRESSURE) {
-            pressure.floatValue = event.values[0]
+            //pressure.floatValue = event.values[0]
+            pressureViewModel.updatePressure(event.values[0])
 
             val a = SensorManager.getAltitude(
                 PRESSURE_STANDARD_ATMOSPHERE,
@@ -469,7 +504,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             if (denominator != 0L) {
                 slope = numerator / denominator
             }
-            altitudeSlope.doubleValue = slope
+            //altitudeSlope.doubleValue = slope
+            verticalSpeedViewModel
+                .updateVerticalSpeed(slope.toFloat())
 
             return
         }
@@ -562,7 +599,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             if (azimuthInDegrees < 0) {
                 azimuthInDegrees += 360f
             }
-            azimuth.floatValue = azimuthInDegrees
+            headingViewModel.updateHeading(azimuthInDegrees)
+            //azimuth.floatValue = azimuthInDegrees
         }
     }
 }

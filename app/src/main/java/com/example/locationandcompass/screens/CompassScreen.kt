@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.locationandcompass.R
+import com.example.locationandcompass.viewmodel.HeadingViewModel
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.time.Clock
@@ -49,8 +51,9 @@ import kotlin.time.ExperimentalTime
 fun CompassScreen(
     navController: NavHostController,
     location: Location,
-    azimuth: Float,
-    magnetometerAccuracy: Int
+    //azimuth: Float,
+    magnetometerAccuracy: Int,
+    headingViewModel: HeadingViewModel
 ) {
     var rotation by remember { mutableFloatStateOf(0f) }
     val state = rememberTransformableState { _, _, rotationChange ->
@@ -58,6 +61,8 @@ fun CompassScreen(
     }
     var latitudeString = doubleToDMSString(abs(location.latitude))
     var longitudeString = doubleToDMSString(abs(location.longitude))
+    val heading by headingViewModel.heading.collectAsState()
+
     var trend = " ${stringResource(R.string.south)}"
     if (location.latitude > 0f) {
         trend = " ${stringResource(R.string.north)}"
@@ -266,7 +271,7 @@ fun CompassScreen(
                     delta = 45
                 }
             }
-            rotate(degrees = -azimuth - rotation) {
+            rotate(degrees = -heading - rotation) {
                 val size1 = Size(
                     size.minDimension,
                     size.minDimension

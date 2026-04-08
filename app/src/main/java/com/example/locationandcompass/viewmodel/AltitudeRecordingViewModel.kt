@@ -5,17 +5,18 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
+import com.example.locationandcompass.MainActivity.Recording
 
 class AltitudeRecordingViewModel(private val application: Application) : ViewModel() {
     private val sharedPreferences: SharedPreferences =
         application.getSharedPreferences("my_app", Context.MODE_PRIVATE)
-    var recording = sharedPreferences.getBoolean("altitude_recording", false)
+    var recording = sharedPreferences.getInt("altitude_recording", Recording.OFF.ordinal)
 
-    fun updateRecording(value: Boolean) {
+    fun updateRecording(value: Int) {
         val sharedPreferences: SharedPreferences =
             application.getSharedPreferences("my_app", Context.MODE_PRIVATE)
         sharedPreferences.edit {
-            putBoolean("altitude_recording", value)
+            putInt("altitude_recording", value)
         }
     }
 }

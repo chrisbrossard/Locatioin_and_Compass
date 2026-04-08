@@ -10,12 +10,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
@@ -25,8 +23,6 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -34,20 +30,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.locationandcompass.MainActivity
 import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AltitudeSession
 import com.example.locationandcompass.data.AltitudeSessionDao
@@ -61,6 +54,8 @@ import com.example.locationandcompass.viewmodel.AltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionCountViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionListViewModel
+import com.example.locationandcompass.viewmodel.HeadingViewModel
+import com.example.locationandcompass.viewmodel.PressureViewModel
 import com.example.locationandcompass.viewmodel.StepRecordingViewModel
 import com.example.locationandcompass.viewmodel.StepSessionCountViewModel
 import com.example.locationandcompass.viewmodel.StepSessionIdViewModel
@@ -68,6 +63,8 @@ import com.example.locationandcompass.viewmodel.StepSessionListViewModel
 import com.example.locationandcompass.viewmodel.StepCountViewModel
 import com.example.locationandcompass.viewmodel.StepDeleteViewModel
 import com.example.locationandcompass.viewmodel.StepListViewModel
+import com.example.locationandcompass.viewmodel.StepViewModel
+import com.example.locationandcompass.viewmodel.VerticalSpeedViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import dev.jamesyox.kastro.sol.calculateSolarState
 import kotlinx.coroutines.CoroutineScope
@@ -88,9 +85,9 @@ import kotlin.time.Instant
 fun OverviewScreen(
     client: FusedLocationProviderClient,
     navController: NavHostController,
-    altitudeSlope: Double,
-    pressure: Float,
-    azimuth: Float,
+    //altitudeSlope: Double,
+    //pressure: Float,
+    //azimuth: Float,
     magnetometerAccuracy: Int,
     //altitudes: ArrayDeque<Int>,
     //stepsDeque: ArrayDeque<Long>,
@@ -99,7 +96,7 @@ fun OverviewScreen(
     stepSampleDao: StepSampleDao,
     stepSessionDao: StepSessionDao,
     altitudeSessionDao: AltitudeSessionDao,
-    steps: Int,
+    //steps: Int,
     stepCountViewModel: StepCountViewModel,
     stepListViewMode: StepListViewModel,
     stepSessionCountViewModel: StepSessionCountViewModel,
@@ -112,24 +109,35 @@ fun OverviewScreen(
     altitudeSessionListViewModel: AltitudeSessionListViewModel,
     altitudeSessionIdViewModel: AltitudeSessionIdViewModel,
     altitudeRecordingViewModel: AltitudeRecordingViewModel,
-    altitudeDeleteViewModel: AltitudeDeleteViewModel
+    altitudeDeleteViewModel: AltitudeDeleteViewModel,
+    onNavigateToAltitudeRecording: () -> Unit,
+    headingViewModel: HeadingViewModel,
+    stepViewModel: StepViewModel,
+    verticalSpeedViewModel: VerticalSpeedViewModel,
+    pressureViewModel: PressureViewModel
 ) {
     var sunMoonOctant by remember { mutableStateOf("-") }
     var compassOctant by remember { mutableStateOf("-") }
     var location1 by remember { mutableStateOf(Location("")) }
-    val stepRowCount by stepCountViewModel.rowCount.collectAsState(initial = 0)
+    //val stepRowCount by stepCountViewModel.rowCount.collectAsState(initial = 0)
     val stepSessionRowCount by stepSessionCountViewModel.rowCount.collectAsState(initial = 0)
     val altitudeSessionRowCount by altitudeSessionCountViewModel.rowCount.collectAsState(initial = 0)
     val stepSessionList by stepSessionListViewModel.rowList.collectAsState(initial = emptyList())
     val altitudeSessionList by altitudeSessionListViewModel.rowList.collectAsState(initial = emptyList())
-    var showBottomSheet by rememberSaveable { mutableStateOf(false) }
+    //var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
-    val stepSessionId by remember { mutableLongStateOf(stepSessionIdViewModel.stepSessionId) }
+    //val stepSessionId by remember { mutableLongStateOf(stepSessionIdViewModel.stepSessionId) }
     //val altitudeSessionId by remember { mutableLongStateOf(altitudeSessionIdViewModel.getSessionId()) }
-    var stepRecording by remember { mutableStateOf(stepRecordingViewModel.recording) }
-    var altitudeRecording by remember { mutableStateOf(altitudeRecordingViewModel.recording) }
-    val scope = rememberCoroutineScope()
+    //var stepRecording by remember { mutableStateOf(stepRecordingViewModel.recording) }
+    //var altitudeRecording by remember { mutableStateOf(altitudeRecordingViewModel.recording) }
+    //val scope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
+    val heading by headingViewModel.heading.collectAsState()
+    val vmSteps by stepViewModel.steps.collectAsState()
+    val verticalSpeed by verticalSpeedViewModel
+        .verticalSpeed.collectAsState()
+    val vmPressure by pressureViewModel.pressure.collectAsState()
+
 
     //Log.d("Location and Compass", "altitude sessions: " + altitudeSessionCountViewModel.getCount())
     LaunchedEffect(Unit) {
@@ -153,7 +161,7 @@ fun OverviewScreen(
     }*/
 
 
-    showBottomSheet = true
+    //showBottomSheet = true
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
@@ -169,9 +177,7 @@ fun OverviewScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-                LazyColumn(
-                    //modifier = Modifier.fillMaxSize()
-                ) {
+                LazyColumn {
                     items(stepSessionList) { item ->
                         val formatted = java.time.Instant.ofEpochMilli(item.startTime)
                             .atZone(ZoneId.systemDefault())
@@ -220,8 +226,7 @@ fun OverviewScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-                LazyColumn(
-                ) {
+                LazyColumn {
                     items(altitudeSessionList) { item ->
                         val formatted = java.time.Instant.ofEpochMilli(item.startTime)
                             .atZone(ZoneId.systemDefault())
@@ -325,7 +330,7 @@ fun OverviewScreen(
                                         stepRecordingViewModel.updateRecording(true)
                                         navController.navigate("steps_profile_recording")
                                     },
-                                text = steps.toString(),
+                                text = vmSteps.toInt().toString(),
                                 maxLines = 1,
                                 autoSize = TextAutoSize.StepBased(),
                             )
@@ -354,7 +359,8 @@ fun OverviewScreen(
                         val s = String.format(
                             Locale.US,
                             "%.0f",
-                            altitudeSlope * 1000 * 60
+                            //altitudeSlope * 1000 * 60
+                            verticalSpeed * 1000 * 60
                         )
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -401,7 +407,7 @@ fun OverviewScreen(
                     ) {
                         val a = SensorManager.getAltitude(
                             PRESSURE_STANDARD_ATMOSPHERE,
-                            pressure
+                            vmPressure
                         )
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -428,15 +434,21 @@ fun OverviewScreen(
                                             )
                                         }
                                     }
-                                    altitudeRecordingViewModel.updateRecording(true)
-                                    navController.navigate("altitude_profile_recording")
+                                    onNavigateToAltitudeRecording()
+                                    //navController.navigate("altitude_profile_recording")
+                                    altitudeRecordingViewModel.updateRecording(
+                                        MainActivity.Recording.STARTING.ordinal)
                                 },
                                 text = a.roundToInt().toString(),
-                                maxLines = 1,
+                                //maxLines = 1,
                                 autoSize = TextAutoSize.StepBased()
                             )
                             Text("Baro Altitude m")
-                            Text("Tap to Record")
+                            /*Text(
+                                modifier = Modifier.clickable {
+                                    navController.navigate("altitude_profile_recording")
+                                },
+                                text = "Tap to Record")*/
                         }
                     }
                     // Sun/Moon
@@ -531,7 +543,7 @@ fun OverviewScreen(
             ) {
                 when (compassOctant) {
                     "-" -> {
-                        when (azimuth.roundToInt()) {
+                        when (heading.roundToInt()) {
                             in 0..45 / 2 -> {
                                 compassOctant = "N"
                             }
@@ -571,65 +583,65 @@ fun OverviewScreen(
                     }
 
                     "N" -> {
-                        if (azimuth > 45 / 2 + 10 && azimuth < 45 + 45 / 2) {
+                        if (heading > 45 / 2 + 10 && heading < 45 + 45 / 2) {
                             compassOctant = "NE"
-                        } else if (azimuth < 360 - 45 / 2 - 10 && azimuth > 315 - 45 / 2) {
+                        } else if (heading < 360 - 45 / 2 - 10 && heading > 315 - 45 / 2) {
                             compassOctant = "NW"
                         }
                     }
 
                     "NE" -> {
-                        if (azimuth > 45 + 45 / 2 + 10) {
+                        if (heading > 45 + 45 / 2 + 10) {
                             compassOctant = "E"
-                        } else if (azimuth < 45 - 45 / 2 - 10) {
+                        } else if (heading < 45 - 45 / 2 - 10) {
                             compassOctant = "N"
                         }
                     }
 
                     "E" -> {
-                        if (azimuth > 90 + 45 / 2 + 10) {
+                        if (heading > 90 + 45 / 2 + 10) {
                             compassOctant = "SE"
-                        } else if (azimuth < 90 - 45 / 2 - 10) {
+                        } else if (heading < 90 - 45 / 2 - 10) {
                             compassOctant = "NE"
                         }
                     }
 
                     "SE" -> {
-                        if (azimuth > 135 + 45 / 2 + 10) {
+                        if (heading > 135 + 45 / 2 + 10) {
                             compassOctant = "S"
-                        } else if (azimuth < 135 - 45 / 2 - 10) {
+                        } else if (heading < 135 - 45 / 2 - 10) {
                             compassOctant = "E"
                         }
                     }
 
                     "S" -> {
-                        if (azimuth > 180 + 45 / 2 + 10) {
+                        if (heading > 180 + 45 / 2 + 10) {
                             compassOctant = "SW"
-                        } else if (azimuth < 180 - 45 / 2 - 10) {
+                        } else if (heading < 180 - 45 / 2 - 10) {
                             compassOctant = "SE"
                         }
                     }
 
                     "SW" -> {
-                        if (azimuth > 225 + 45 / 2 + 10) {
+                        if (heading > 225 + 45 / 2 + 10) {
                             compassOctant = "W"
-                        } else if (azimuth < 225 - 45 / 2 - 10) {
+                        } else if (heading < 225 - 45 / 2 - 10) {
                             compassOctant = "S"
                         }
                     }
 
                     "W" -> {
-                        if (azimuth > 270 + 45 / 2 + 10) {
+                        if (heading > 270 + 45 / 2 + 10) {
                             compassOctant = "NW"
-                        } else if (azimuth < 270 - 45 / 2 - 10) {
+                        } else if (heading < 270 - 45 / 2 - 10) {
                             compassOctant = "SW"
                         }
                     }
 
                     "NW" -> {
-                        if (azimuth > 315 + 45 / 2 + 10) {
+                        if (heading > 315 + 45 / 2 + 10) {
                             compassOctant = "N"
-                        } else if (azimuth < 315 - 45 / 2 - 10) {
+                        } else if (heading < 315 - 45 / 2 - 10) {
                             compassOctant = "W"
                         }
                     }
@@ -644,7 +656,8 @@ fun OverviewScreen(
                         text = compassOctant,
                         autoSize = TextAutoSize.StepBased()
                     )
-                    Text(azimuth.roundToInt().toString() + "\u00b0")
+                    //Text(azimuth.roundToInt().toString() + "\u00b0")
+                    Text(heading.toInt().toString() + "\u00b0")
                     Text("Heading")
                 }
             }
