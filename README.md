@@ -6,7 +6,7 @@ To view the source code or run the app, install Android Studio on your machine a
 
 The project is maintained by Chris Brossard.
 
-<img width="720" height="1600" alt="Screenshot_20260410-143626" src="https://github.com/user-attachments/assets/c2883559-d0ba-454e-bc31-0badd6827668" />
+<img width="180" height="400" alt="Screenshot_20260410-143626" src="https://github.com/user-attachments/assets/25a5de15-631a-41f5-ab59-4d907bde3505" />
 
 <img width="180" height="400" alt="Screenshot_20260406-111224" src="https://github.com/user-attachments/assets/74687b62-fb8d-4e7a-80fe-0209de6e3d2f" />
 
