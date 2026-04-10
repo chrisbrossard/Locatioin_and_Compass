@@ -19,6 +19,12 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 class LocationService : Service() {
     val client: FusedLocationProviderClient by lazy {
@@ -48,6 +54,7 @@ class LocationService : Service() {
     inner class LocalBinder : Binder() {
         fun getService(): LocationService = this@LocationService
     }
+    var serviceJob: Job? = null
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
@@ -87,28 +94,30 @@ class LocationService : Service() {
             Looper.getMainLooper()
         )*/
 
-        client.getCurrentLocation(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            CancellationTokenSource().token
-        ).addOnSuccessListener { location ->
-            if (location != null) {
-                val intent = Intent("com.example.compassandlocation.location")
-                intent.putExtra("latitude", location.latitude)
-                intent.putExtra("longitude", location.longitude)
-                intent.putExtra("accuracy", location.accuracy)
-                intent.putExtra("speed", location.speed)
-                intent.putExtra("bearing", location.bearing)
-                intent.putExtra("bearing_accuracy", location.bearingAccuracyDegrees)
-                intent.putExtra("altitude", location.altitude)
-                sendBroadcast(intent)
+        serviceJob = CoroutineScope(Dispatchers.IO).launch {
+            while (isActive) {
+                client.getCurrentLocation(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    CancellationTokenSource().token
+                ).addOnSuccessListener { location ->
+                    if (location != null) {
+                        val intent = Intent("com.example.compassandlocation.location")
+                        intent.putExtra("latitude", location.latitude)
+                        intent.putExtra("longitude", location.longitude)
+                        intent.putExtra("altitude", location.altitude)
+                        sendBroadcast(intent)
+                    }
+                }
+                delay(10000)
             }
         }
 
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        client.removeLocationUpdates(locationCallback)
+        serviceJob?.cancel()
+        //client.removeLocationUpdates(locationCallback)
     }
 }

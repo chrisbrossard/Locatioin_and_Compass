@@ -3,7 +3,10 @@ package com.example.locationandcompass
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -34,6 +37,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AltitudeSessionDao
 import com.example.locationandcompass.data.AppDatabase
+import com.example.locationandcompass.data.StepSample
 import com.example.locationandcompass.data.StepSampleDao
 import com.example.locationandcompass.data.StepSessionDao
 import com.example.locationandcompass.service.AltitudeStepsService
@@ -45,6 +49,8 @@ import com.example.locationandcompass.viewmodel.AltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionCountViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionListViewModel
+import com.example.locationandcompass.viewmodel.DistanceViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeViewModel
 import com.example.locationandcompass.viewmodel.PressureViewModel
 import com.example.locationandcompass.viewmodel.HeadingViewModel
 import com.example.locationandcompass.viewmodel.StepCountViewModel
@@ -60,6 +66,9 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlin.time.ExperimentalTime
 
 class MainActivity : ComponentActivity(), SensorEventListener {
@@ -154,10 +163,15 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         headingViewModel,
                         stepViewModel,
                         verticalSpeedViewModel,
-                        pressureViewModel
+                        pressureViewModel,
+                        distanceViewModel,
+                        gPSAltitudeViewModel
                     )
                 }
             }
+            intent = Intent(this, LocationService::class.java)
+            ContextCompat.startForegroundService(this, intent)
+
             intent = Intent(this, AltitudeStepsService::class.java)
             ContextCompat.startForegroundService(this, intent)
         }
@@ -191,6 +205,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     //var stepsStartMillis = 0L
     var altitudeStartTime = 0L
     val altitudeSlope = mutableDoubleStateOf(0.0)
+
     //val stepsSlope = mutableFloatStateOf(0f)
     private var pressureSensor: Sensor? = null
     private var stepSensor: Sensor? = null
@@ -198,6 +213,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     lateinit var gnssStatusCallback: GnssStatus.Callback
     val magnetometerAccuracy = mutableIntStateOf(0)
     var mutableGnssStatus by mutableStateOf<GnssStatus?>(null)
+
     //val updateSteps: Int = 0
     //val updateAltitude = 1
     val steps = mutableIntStateOf(0)
@@ -224,18 +240,64 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     lateinit var stepRecordingViewModel: StepRecordingViewModel
     lateinit var altitudeRecordingViewModel: AltitudeRecordingViewModel
+
     enum class Recording {
         OFF, STARTING, ON
     }
+
     private val headingViewModel: HeadingViewModel by viewModels()
     private val stepViewModel: StepViewModel by viewModels()
     private val verticalSpeedViewModel: VerticalSpeedViewModel by viewModels()
     private val pressureViewModel: PressureViewModel by viewModels()
+    private val distanceViewModel: DistanceViewModel by viewModels()
+    private val gPSAltitudeViewModel: GPSAltitudeViewModel by viewModels()
+
+    private var currentLocation: Location = Location("")
+
+    @OptIn(DelicateCoroutinesApi::class)
+    val locationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        @RequiresApi(Build.VERSION_CODES.O)
+        override fun onReceive(context: Context, intent: Intent) {
+            //val scope = rememberCoroutineScope()
+            var a = intent.getIntExtra("altitude", 0)
+
+            val location = Location("")
+            location.latitude = intent.getDoubleExtra("latitude", 0.0)
+            location.longitude = intent.getDoubleExtra("longitude", 0.0)
+            location.altitude = intent.getDoubleExtra("altitude", 0.0)
+
+            if (currentLocation.latitude != 0.0) {
+                val delta = location.distanceTo(currentLocation)
+                distanceViewModel.updateDistance(delta)
+                gPSAltitudeViewModel.updateAltitude(location.altitude)
+            }
+            currentLocation = location
+
+            /*GlobalScope.launch {
+                val pendingResult = goAsync()
+                try {
+                    val stepSample = StepSample(
+                        sessionId = 0L,
+                        time = 0L,
+                        steps = 0L
+                    )
+                    stepSampleDao.insert(stepSample)
+                } finally {
+                    pendingResult.finish()
+                }
+            }*/
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        registerReceiver(
+            locationReceiver,
+            IntentFilter("com.example.compassandlocation.location"),
+            RECEIVER_EXPORTED
+        )
 
         Log.d("Location and Compass", "OnCreate called")
 
@@ -355,13 +417,23 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         headingViewModel,
                         stepViewModel,
                         verticalSpeedViewModel,
-                        pressureViewModel
+                        pressureViewModel,
+                        distanceViewModel,
+                        gPSAltitudeViewModel
                     )
                 }
             }
 
             intent = Intent(this, AltitudeStepsService::class.java)
-            val safeIntent = IntentSanitizer.Builder()
+            var safeIntent = IntentSanitizer.Builder()
+                .allowAnyComponent()
+                .build()
+                .sanitize(intent) { string ->
+                    Log.d("Location and Compass", string)
+                }
+            ContextCompat.startForegroundService(this, safeIntent)
+            intent = Intent(this, LocationService::class.java)
+            safeIntent = IntentSanitizer.Builder()
                 .allowAnyComponent()
                 .build()
                 .sanitize(intent) { string ->
@@ -369,17 +441,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                 }
             ContextCompat.startForegroundService(this, safeIntent)
         }
-
-
-        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     override fun onStart() {
         super.onStart()
         Log.d("Location and Compass", "onStart() called ")
-
-
-
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -439,8 +506,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        //unregisterReceiver(altitudeStepsReceiver)
+        unregisterReceiver(locationReceiver)
         stopService(Intent(this, LocationService::class.java))
+        stopService(Intent(this, AltitudeStepsService::class.java))
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
@@ -457,7 +525,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             }
             //steps.intValue = (event.values[0].toLong() - startSteps).toInt()
             stepViewModel.updateSteps(
-                ((event.values[0].toLong() - startSteps).toFloat()))
+                ((event.values[0].toLong() - startSteps).toFloat())
+            )
         }
         if (event?.sensor?.type == Sensor.TYPE_PRESSURE) {
             //pressure.floatValue = event.values[0]
@@ -878,8 +947,4 @@ startSteps: Int
             .allowMainThreadQueries()
             .build()
 */
-/*registerReceiver(
-    altitudeStepsReceiver,
-    IntentFilter("com.example.compassandlocation.altitude_steps"),
-    RECEIVER_EXPORTED
-)*/
+

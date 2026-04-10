@@ -23,9 +23,12 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -54,6 +57,8 @@ import com.example.locationandcompass.viewmodel.AltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionCountViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionListViewModel
+import com.example.locationandcompass.viewmodel.DistanceViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeViewModel
 import com.example.locationandcompass.viewmodel.HeadingViewModel
 import com.example.locationandcompass.viewmodel.PressureViewModel
 import com.example.locationandcompass.viewmodel.StepRecordingViewModel
@@ -114,7 +119,9 @@ fun OverviewScreen(
     headingViewModel: HeadingViewModel,
     stepViewModel: StepViewModel,
     verticalSpeedViewModel: VerticalSpeedViewModel,
-    pressureViewModel: PressureViewModel
+    pressureViewModel: PressureViewModel,
+    distanceViewModel: DistanceViewModel,
+    gPSAltitudeViewModel: GPSAltitudeViewModel
 ) {
     var sunMoonOctant by remember { mutableStateOf("-") }
     var compassOctant by remember { mutableStateOf("-") }
@@ -137,7 +144,8 @@ fun OverviewScreen(
     val verticalSpeed by verticalSpeedViewModel
         .verticalSpeed.collectAsState()
     val vmPressure by pressureViewModel.pressure.collectAsState()
-
+    val distance by distanceViewModel.distance.collectAsState()
+    val gPSAltitude by gPSAltitudeViewModel.altitude.collectAsState()
 
     //Log.d("Location and Compass", "altitude sessions: " + altitudeSessionCountViewModel.getCount())
     LaunchedEffect(Unit) {
@@ -160,7 +168,6 @@ fun OverviewScreen(
         showBottomSheet = true
     }*/
 
-
     //showBottomSheet = true
 
     BottomSheetScaffold(
@@ -178,44 +185,67 @@ fun OverviewScreen(
                     )
                 }
                 LazyColumn {
-                    items(stepSessionList) { item ->
-                        val formatted = java.time.Instant.ofEpochMilli(item.startTime)
-                            .atZone(ZoneId.systemDefault())
-                            .format(DateTimeFormatter.ofPattern("MMM d, h.mm a"))
-                        Row(
-                            modifier = Modifier
-                                .clickable {
-                                    stepSessionIdViewModel.setSessionId(item.sessionId)
-                                    navController.navigate("steps_profile_viewing")
-                                }
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                //modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Text(formatted)
+                    items(
+                        items = stepSessionList,
+                        key = { it.sessionId }
+                    ) { item ->
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            initialValue = SwipeToDismissBoxValue.Settled,
+                            positionalThreshold = { totalDistance ->
+                                totalDistance * 0.75f
                             }
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.CenterEnd
-                            ) {
-                                Button(
-                                    onClick = {
-                                        val serviceScope =
-                                            CoroutineScope(SupervisorJob() + Dispatchers.IO)
-                                        serviceScope.launch {
-                                            try {
-                                                stepSampleDao.deleteBySessionId(item.sessionId)
-                                                stepSessionDao.deleteBySessionId(item.sessionId)
-                                            } catch (e: Exception) {
-                                                Log.e("Location and Compass", "step delete failed", e)
-                                            }
-                                        }                                    }
-                                ) {
-                                    Text("Delete")
+                        )
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromEndToStart = false,
+                            backgroundContent = {
+                            },
+                            onDismiss = {
+                                val serviceScope =
+                                    CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                                serviceScope.launch {
+                                    try {
+                                        stepSampleDao.deleteBySessionId(item.sessionId)
+                                        stepSessionDao.deleteBySessionId(item.sessionId)
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            "Location and Compass",
+                                            "step delete failed",
+                                            e
+                                        )
+                                    }
                                 }
+                            }
+                        ) {
+                            val formatted = java.time.Instant.ofEpochMilli(item.startTime)
+                                .atZone(ZoneId.systemDefault())
+                                .format(DateTimeFormatter.ofPattern("MMM d, h.mm a"))
+                            Row(
+                                modifier = Modifier
+                                    .clickable {
+                                        stepSessionIdViewModel.setSessionId(item.sessionId)
+                                        navController.navigate("steps_profile_viewing")
+                                    }
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    //modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Text(formatted)
+                                }
+                                /*Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Button(
+                                        onClick = {
+                                        }
+                                    ) {
+                                        Text("Delete")
+                                    }
+                                }*/
                             }
                         }
                     }
@@ -227,6 +257,72 @@ fun OverviewScreen(
                     )
                 }
                 LazyColumn {
+                    items(
+                        items = altitudeSessionList,
+                        key = { it.sessionId }
+                    ) { item ->
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            initialValue = SwipeToDismissBoxValue.Settled,
+                            positionalThreshold = { totalDistance ->
+                                totalDistance * 0.75f
+                            }
+                        )
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromEndToStart = false,
+                            backgroundContent = {
+                            },
+                            onDismiss = {
+                                val serviceScope =
+                                    CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                                serviceScope.launch {
+                                    try {
+                                        altitudeSampleDao.deleteBySessionId(item.sessionId)
+                                        altitudeSessionDao.deleteBySessionId(item.sessionId)
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            "Location and Compass",
+                                            "altitude delete failed",
+                                            e
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            val formatted = java.time.Instant.ofEpochMilli(item.startTime)
+                                .atZone(ZoneId.systemDefault())
+                                .format(DateTimeFormatter.ofPattern("MMM d, h.mm a"))
+                            Row(
+                                modifier = Modifier
+                                    .clickable {
+                                        altitudeSessionIdViewModel.setSessionId(item.sessionId)
+                                        navController.navigate("altitude_profile_viewing")
+                                    }
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    //modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Text(formatted)
+                                }
+                                /*Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Button(
+                                        onClick = {
+                                        }
+                                    ) {
+                                        Text("Delete")
+                                    }
+                                }*/
+                            }
+                        }
+                    }
+                }
+                /*LazyColumn {
                     items(altitudeSessionList) { item ->
                         val formatted = java.time.Instant.ofEpochMilli(item.startTime)
                             .atZone(ZoneId.systemDefault())
@@ -273,7 +369,7 @@ fun OverviewScreen(
                             }
                         }
                     }
-                }
+                }*/
             }
         }
         // main screen
@@ -283,7 +379,7 @@ fun OverviewScreen(
             // first row
             Box(
                 modifier = Modifier
-                    .weight(0.5f)
+                    .weight(0.3f)
                     .background(grey),
                 contentAlignment = Alignment.Center
             ) {
@@ -335,7 +431,7 @@ fun OverviewScreen(
                                 autoSize = TextAutoSize.StepBased(),
                             )
                             Text("Steps")
-                            Text("Tap to Record")
+                            //Text("Tap to Record")
                         }
                     }
                     // vertical speed
@@ -381,7 +477,7 @@ fun OverviewScreen(
             // second row
             Box(
                 modifier = Modifier
-                    .weight(0.5f)
+                    .weight(0.3f)
                     .background(grey)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -444,11 +540,7 @@ fun OverviewScreen(
                                 autoSize = TextAutoSize.StepBased()
                             )
                             Text("Baro Altitude m")
-                            /*Text(
-                                modifier = Modifier.clickable {
-                                    navController.navigate("altitude_profile_recording")
-                                },
-                                text = "Tap to Record")*/
+                            //Text("Tap to Record")
                         }
                     }
                     // Sun/Moon
@@ -528,7 +620,7 @@ fun OverviewScreen(
                                 text = sunMoonOctant,
                                 autoSize = TextAutoSize.StepBased()
                             )
-                            Text("Sun")
+                            Text("Sun Direction")
                         }
                     }
                 }
@@ -536,8 +628,79 @@ fun OverviewScreen(
             // third row
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(0.3f)
                     .background(Color.Transparent)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Row {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(grey)
+                            .fillMaxSize()
+                            .drawBehind {
+                                val strokeWidth = 1.dp.toPx()
+                                val y = size.height - strokeWidth / 2
+                                drawLine(
+                                    color = Color.LightGray,
+                                    start = Offset(0f, y),
+                                    end = Offset(size.width, y),
+                                    strokeWidth = strokeWidth
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            BasicText(
+                                modifier = Modifier.clickable {
+                                    //navController.navigate("compass")
+                                },
+                                text = distance.toInt().toString(),
+                                autoSize = TextAutoSize.StepBased()
+                            )
+                            Text("GPS Distance m")
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(grey)
+                            .fillMaxSize()
+                            .drawBehind {
+                                val strokeWidth = 1.dp.toPx()
+                                val y = size.height - strokeWidth / 2
+                                drawLine(
+                                    color = Color.LightGray,
+                                    start = Offset(0f, y),
+                                    end = Offset(size.width, y),
+                                    strokeWidth = strokeWidth
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            BasicText(
+                                modifier = Modifier.clickable {
+                                    //navController.navigate("compass")
+                                },
+                                text = gPSAltitude.toInt().toString(),
+                                autoSize = TextAutoSize.StepBased()
+                            )
+                            Text("GPS Altitude m")
+                        }
+                    }
+                }
+            }
+            // Fourth Row
+            Box(
+                modifier = Modifier
+                    .weight(0.5f)
+                    .background(grey)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {

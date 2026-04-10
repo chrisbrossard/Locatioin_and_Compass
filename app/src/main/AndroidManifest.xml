@@ -36,6 +36,11 @@
             </intent-filter>
         </activity>
         <service
+            android:name=".service.LocationService"
+            android:foregroundServiceType="location|dataSync"
+            android:exported="false">
+        </service>
+        <service
             android:name=".service.AltitudeStepsService"
             android:foregroundServiceType="location|dataSync"
             android:exported="false">

@@ -46,6 +46,8 @@ import com.example.locationandcompass.viewmodel.StepDeleteViewModel
 import com.example.locationandcompass.viewmodel.StepListViewModel
 import com.example.locationandcompass.viewmodel.StepViewModel
 import com.example.locationandcompass.viewmodel.VerticalSpeedViewModel
+import com.example.locationandcompass.viewmodel.DistanceViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import kotlin.time.ExperimentalTime
 
@@ -86,7 +88,9 @@ fun Navigation(
     headingViewModel: HeadingViewModel,
     stepViewModel: StepViewModel,
     verticalSpeedViewModel: VerticalSpeedViewModel,
-    pressureViewModel: PressureViewModel
+    pressureViewModel: PressureViewModel,
+    distanceViewModel: DistanceViewModel,
+    gPSAltitudeViewModel: GPSAltitudeViewModel
 ) {
     var location1 by remember { mutableStateOf(Location("")) }
 
@@ -137,7 +141,9 @@ fun Navigation(
                 headingViewModel = headingViewModel,
                 stepViewModel = stepViewModel,
                 verticalSpeedViewModel = verticalSpeedViewModel,
-                pressureViewModel = pressureViewModel
+                pressureViewModel = pressureViewModel,
+                distanceViewModel = distanceViewModel,
+                gPSAltitudeViewModel = gPSAltitudeViewModel
             )
         }
         composable("sun_moon") {
