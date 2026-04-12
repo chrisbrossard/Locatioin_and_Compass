@@ -86,8 +86,9 @@ class AltitudeStepsService : Service(), SensorEventListener {
         if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
 
             val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
-            val recording = sharedPreferences.getBoolean("step_recording", false)
-            if (!recording) {
+            val recording = sharedPreferences.getInt("step_recording",
+                Recording.OFF.ordinal)
+            if (recording == Recording.OFF.ordinal) {
                 return
             }
 

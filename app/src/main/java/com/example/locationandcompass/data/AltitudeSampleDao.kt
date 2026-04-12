@@ -30,6 +30,4 @@ interface AltitudeSampleDao {
 
     @Delete
     fun delete(altitudeSample: AltitudeSample)
-
-
 }

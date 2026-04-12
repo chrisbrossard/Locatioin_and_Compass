@@ -95,8 +95,6 @@ class LocationService : Service() {
             Looper.getMainLooper()
         )*/
 
-
-
         serviceJob = CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
                 val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
@@ -104,18 +102,16 @@ class LocationService : Service() {
                     "gps_altitude_recording",
                     -1
                 )
-                if (recording != Recording.OFF.ordinal) {
-                    client.getCurrentLocation(
-                        Priority.PRIORITY_HIGH_ACCURACY,
-                        CancellationTokenSource().token
-                    ).addOnSuccessListener { location ->
-                        if (location != null) {
-                            val intent = Intent("com.example.compassandlocation.location")
-                            intent.putExtra("latitude", location.latitude)
-                            intent.putExtra("longitude", location.longitude)
-                            intent.putExtra("altitude", location.altitude)
-                            sendBroadcast(intent)
-                        }
+                client.getCurrentLocation(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    CancellationTokenSource().token
+                ).addOnSuccessListener { location ->
+                    if (location != null) {
+                        val intent = Intent("com.example.compassandlocation.location")
+                        intent.putExtra("latitude", location.latitude)
+                        intent.putExtra("longitude", location.longitude)
+                        intent.putExtra("altitude", location.altitude)
+                        sendBroadcast(intent)
                     }
                 }
                 delay(5000)

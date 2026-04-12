@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
+import com.example.locationandcompass.MainActivity
 import com.example.locationandcompass.viewmodel.StepRecordingViewModel
 import com.example.locationandcompass.viewmodel.StepListViewModel
 import com.example.locationandcompass.viewmodel.StepSessionIdViewModel
@@ -42,7 +43,7 @@ fun StepsProfileRecordingScreen(
     val sessionId = stepSessionIdViewModel.getSessionId()
 
     BackHandler(enabled = true) {
-        stepRecordingViewModel.updateRecording(false)
+        stepRecordingViewModel.updateRecording(MainActivity.Recording.OFF.ordinal)
         navController.popBackStack()
     }
 

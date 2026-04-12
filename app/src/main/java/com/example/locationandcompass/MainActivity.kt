@@ -26,24 +26,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentSanitizer
 import androidx.navigation.compose.rememberNavController
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import com.example.locationandcompass.data.AltitudeSample
 import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AltitudeSessionDao
 import com.example.locationandcompass.data.AppDatabase
 import com.example.locationandcompass.data.GPSAltitudeSample
 import com.example.locationandcompass.data.GPSAltitudeSampleDao
-import com.example.locationandcompass.data.StepSample
 import com.example.locationandcompass.data.StepSampleDao
 import com.example.locationandcompass.data.StepSessionDao
 import com.example.locationandcompass.service.AltitudeStepsService
@@ -82,11 +75,18 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlin.time.ExperimentalTime
 import androidx.core.content.edit
+import com.example.locationandcompass.data.LocationSample
+import com.example.locationandcompass.data.LocationSampleDao
+import com.example.locationandcompass.data.LocationSessionDao
+import com.example.locationandcompass.viewmodel.LocationListViewModel
+import com.example.locationandcompass.viewmodel.LocationRecordingViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionCountViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionIdViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionListViewModel
 
 class MainActivity : ComponentActivity(), SensorEventListener {
     val fusedLocationProviderClient: FusedLocationProviderClient by lazy {
@@ -186,7 +186,14 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         gPSAltitudeSessionDao,
                         gPSAltitudeSessionIdViewModel,
                         gPSAltitudeListViewModel,
-                        gPSAltitudeRecordingViewModel
+                        gPSAltitudeRecordingViewModel,
+                        locationListViewModel,
+                        locationRecordingViewModel,
+                        locationSessionIdViewModel,
+                        locationSessionDao,
+                        locationSessionListViewModel,
+                        locationSampleDao,
+                        locationSessionCountViewModel
                     )
                 }
             }
@@ -204,8 +211,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private val magnetic = FloatArray(3)
     private val rotationMatrix = FloatArray(9)
     private val orientation = FloatArray(3)
-    val azimuth = mutableFloatStateOf(-1f)
-    val pressure = mutableFloatStateOf(0f)
+    //val azimuth = mutableFloatStateOf(-1f)
+    //val pressure = mutableFloatStateOf(0f)
     var startSteps = 0L
     val arraySize = 40
     val accelerationX = FloatArray(arraySize)
@@ -225,7 +232,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
     //var stepsStartMillis = 0L
     var altitudeStartTime = 0L
-    val altitudeSlope = mutableDoubleStateOf(0.0)
+    //val altitudeSlope = mutableDoubleStateOf(0.0)
 
     //val stepsSlope = mutableFloatStateOf(0f)
     private var pressureSensor: Sensor? = null
@@ -270,6 +277,13 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     lateinit var altitudeRecordingViewModel: AltitudeRecordingViewModel
     lateinit var gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel
 
+    lateinit var locationSampleDao: LocationSampleDao
+    lateinit var locationSessionDao: LocationSessionDao
+    lateinit var locationListViewModel: LocationListViewModel
+    lateinit var locationRecordingViewModel: LocationRecordingViewModel
+    lateinit var locationSessionIdViewModel: LocationSessionIdViewModel
+    lateinit var locationSessionListViewModel: LocationSessionListViewModel
+    lateinit var locationSessionCountViewModel: LocationSessionCountViewModel
 
     enum class Recording {
         OFF, STARTING, ON
@@ -283,7 +297,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private val gPSAltitudeViewModel: GPSAltitudeViewModel by viewModels()
 
     private var currentLocation: Location = Location("")
-    var startTime = 0L
+    var gpsAltitudeStartTime = 0L
+    var locationStartTime = 0L
 
     @OptIn(DelicateCoroutinesApi::class)
     val locationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -295,27 +310,37 @@ class MainActivity : ComponentActivity(), SensorEventListener {
             location.altitude = intent.getDoubleExtra("altitude", 0.0)
 
             val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
-            val recording = sharedPreferences.getInt(
+            val gpsAltitudeRecording = sharedPreferences.getInt(
                 "gps_altitude_recording",
                 -1
             )
-            val sessionId = sharedPreferences.getLong(
+            val locationRecording = sharedPreferences.getInt(
+                "location_recording",
+                -1
+            )
+            val gPSAltitudeSessionId = sharedPreferences.getLong(
                 "gps_altitude_session_id",
+                -1L)
+            val locationSessionId = sharedPreferences.getLong(
+                "location_session_id",
                 -1L)
 
             val now = System.currentTimeMillis()
-            if (recording == Recording.STARTING.ordinal) {
-                startTime = now
+            if (gpsAltitudeRecording == Recording.STARTING.ordinal) {
+                gpsAltitudeStartTime = now
+            }
+            if (locationRecording == Recording.STARTING.ordinal) {
+                locationStartTime = now
             }
 
-            if (recording != Recording.OFF.ordinal) {
-                val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-                serviceScope.launch {
+            if (gpsAltitudeRecording != Recording.OFF.ordinal) {
+                val serviceScope1 = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                serviceScope1.launch {
                     try {
                         gPSAltitudeSampleDao.insert(
                             GPSAltitudeSample(
-                                sessionId = sessionId,
-                                time = now - startTime,
+                                sessionId = gPSAltitudeSessionId,
+                                time = now - gpsAltitudeStartTime,
                                 altitude = location.altitude.toFloat()
                             )
                         )
@@ -323,9 +348,29 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         Log.e("Location and Compass", "altitude sample insert failed", e)
                     }
                 }
+                sharedPreferences.edit {
+                    putInt("gps_altitude_recording", Recording.ON.ordinal)
+                }
             }
-            sharedPreferences.edit {
-                putInt("gps_altitude_recording", Recording.ON.ordinal)
+            if (locationRecording != Recording.OFF.ordinal) {
+                val serviceScope2 = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                serviceScope2.launch {
+                    try {
+                        locationSampleDao.insert(
+                            LocationSample(
+                                sessionId = locationSessionId,
+                                time = now - locationStartTime,
+                                latitude = location.latitude,
+                                longitude = location.longitude
+                            )
+                        )
+                    } catch (e: Exception) {
+                        Log.e("Location and Compass", "location sample insert failed", e)
+                    }
+                }
+                sharedPreferences.edit {
+                    putInt("location_recording", Recording.ON.ordinal)
+                }
             }
 
             if (currentLocation.latitude != 0.0) {
@@ -387,7 +432,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         altitudeDeleteViewModel = AltitudeDeleteViewModel(altitudeSampleDao, altitudeSessionDao)
         gPSAltitudeSessionDao = database.gPSAltitudeSessionDao()
         gPSAltitudeSessionCountViewModel = GPSAltitudeSessionCountViewModel(gPSAltitudeSessionDao)
-        gPSAltitudeSessionListViewModel = GPSAltitudeSessionListViewModel(gPSAltitudeSessionDao)
+        gPSAltitudeSessionListViewModel = GPSAltitudeSessionListViewModel(
+            gPSAltitudeSessionDao)
         gPSAltitudeSessionIdViewModel = GPSAltitudeSessionIdViewModel(application)
         gPSAltitudeDeleteViewModel =
             GPSAltitudeDeleteViewModel(gPSAltitudeSampleDao, gPSAltitudeSessionDao)
@@ -395,6 +441,14 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         stepRecordingViewModel = StepRecordingViewModel(application)
         altitudeRecordingViewModel = AltitudeRecordingViewModel(application)
         gPSAltitudeRecordingViewModel = GPSAltitudeRecordingViewModel(application)
+
+        locationSampleDao = database.locationSampleDao()
+        locationSessionDao = database.locationSessionDao()
+        locationListViewModel = LocationListViewModel(locationSampleDao)
+        locationRecordingViewModel = LocationRecordingViewModel(application)
+        locationSessionIdViewModel = LocationSessionIdViewModel(application)
+        locationSessionListViewModel = LocationSessionListViewModel(locationSessionDao)
+        locationSessionCountViewModel = LocationSessionCountViewModel(locationSessionDao)
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -494,7 +548,14 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         gPSAltitudeSessionDao,
                         gPSAltitudeSessionIdViewModel,
                         gPSAltitudeListViewModel,
-                        gPSAltitudeRecordingViewModel
+                        gPSAltitudeRecordingViewModel,
+                        locationListViewModel,
+                        locationRecordingViewModel,
+                        locationSessionIdViewModel,
+                        locationSessionDao,
+                        locationSessionListViewModel,
+                        locationSampleDao,
+                        locationSessionCountViewModel
                     )
                 }
             }

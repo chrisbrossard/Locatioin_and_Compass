@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.locationandcompass.MainActivity
 import com.example.locationandcompass.viewmodel.AltitudeListViewModel
@@ -38,6 +39,7 @@ fun AltitudeProfileRecordingScreen(
     gPSAltitudeSessionIdViewModel: GPSAltitudeSessionIdViewModel,
     gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel
 ) {
+    //val altitudeListViewModel: AltitudeListViewModel = viewModel()
     val rowList by altitudeListViewModel.rowList.collectAsState(initial = emptyList())
     val gPSRowList by gPSAltitudeListViewModel.rowList.collectAsState(initial = emptyList())
     //var clickedText by remember { mutableStateOf("Stop Recording") }
@@ -52,6 +54,7 @@ fun AltitudeProfileRecordingScreen(
 
         navController.popBackStack("overview", false)
     }
+
 
     /*Scaffold(
         floatingActionButton = {

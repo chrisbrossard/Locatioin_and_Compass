@@ -18,11 +18,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AltitudeSessionDao
+import com.example.locationandcompass.data.LocationSampleDao
+import com.example.locationandcompass.data.LocationSessionDao
 import com.example.locationandcompass.data.StepSampleDao
 import com.example.locationandcompass.data.StepSessionDao
 import com.example.locationandcompass.screens.AltitudeProfileRecordingScreen
 import com.example.locationandcompass.screens.AltitudeProfileViewingScreen
 import com.example.locationandcompass.screens.CompassScreen
+import com.example.locationandcompass.screens.DistanceProfileRecordingScreen
+import com.example.locationandcompass.screens.DistanceProfileViewingScreen
 import com.example.locationandcompass.screens.GNSSScreen
 import com.example.locationandcompass.screens.OverviewScreen
 import com.example.locationandcompass.screens.StepsProfileRecordingScreen
@@ -52,6 +56,11 @@ import com.example.locationandcompass.viewmodel.GPSAltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.GPSAltitudeSessionDao
 import com.example.locationandcompass.viewmodel.GPSAltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.GPSAltitudeViewModel
+import com.example.locationandcompass.viewmodel.LocationListViewModel
+import com.example.locationandcompass.viewmodel.LocationRecordingViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionCountViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionIdViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionListViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import kotlin.time.ExperimentalTime
 
@@ -98,8 +107,15 @@ fun Navigation(
     gPSAltitudeSessionDao: GPSAltitudeSessionDao,
     gPSAltitudeSessionIdViewModel: GPSAltitudeSessionIdViewModel,
     gPSAltitudeListViewModel: GPSAltitudeListViewModel,
-    gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel
-) {
+    gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel,
+    locationListViewModel: LocationListViewModel,
+    locationRecordingViewModel: LocationRecordingViewModel,
+    locationSessionIdViewModel: LocationSessionIdViewModel,
+    locationSessionDao: LocationSessionDao,
+    locationSessionListViewModel: LocationSessionListViewModel,
+    locationSampleDao: LocationSampleDao,
+    locationSessionCountViewModel: LocationSessionCountViewModel
+    ) {
     var location1 by remember { mutableStateOf(Location("")) }
 
     Log.d("Location and Compass", "Navigation() called")
@@ -154,7 +170,14 @@ fun Navigation(
                 gPSAltitudeViewModel = gPSAltitudeViewModel,
                 gPSAltitudeSessionDao,
                 gPSAltitudeSessionIdViewModel,
-                gPSAltitudeRecordingViewModel
+                gPSAltitudeRecordingViewModel,
+                locationListViewModel,
+                locationRecordingViewModel,
+                locationSessionIdViewModel,
+                locationSessionDao,
+                locationSessionListViewModel,
+                locationSampleDao,
+                locationSessionCountViewModel
             )
         }
         composable("sun_moon") {
@@ -214,6 +237,27 @@ fun Navigation(
                 stepListViewModel,
                 //stepRecordingViewModel,
                 stepSessionIdViewModel
+            )
+        }
+        composable("distance_profile_recording") {
+            DistanceProfileRecordingScreen(
+                //stepsDeque,
+                //stepsTimesDeque,
+                //stepSampleDao,
+                locationListViewModel,
+                locationRecordingViewModel,
+                navController,
+                locationSessionIdViewModel
+            )
+        }
+        composable("distance_profile_viewing") {
+            DistanceProfileViewingScreen(
+                //stepsDeque,
+                //stepsTimesDeque,
+                //stepSampleDao,
+                locationListViewModel,
+                //stepRecordingViewModel,
+                locationSessionIdViewModel
             )
         }
         composable("vertical_speed") {

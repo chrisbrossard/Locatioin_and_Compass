@@ -48,6 +48,9 @@ import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AltitudeSession
 import com.example.locationandcompass.data.AltitudeSessionDao
 import com.example.locationandcompass.data.GPSAltitudeSession
+import com.example.locationandcompass.data.LocationSampleDao
+import com.example.locationandcompass.data.LocationSession
+import com.example.locationandcompass.data.LocationSessionDao
 import com.example.locationandcompass.data.StepSampleDao
 import com.example.locationandcompass.data.StepSession
 import com.example.locationandcompass.data.StepSessionDao
@@ -62,6 +65,12 @@ import com.example.locationandcompass.viewmodel.DistanceViewModel
 import com.example.locationandcompass.viewmodel.GPSAltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.GPSAltitudeViewModel
 import com.example.locationandcompass.viewmodel.HeadingViewModel
+import com.example.locationandcompass.viewmodel.LocationListViewModel
+import com.example.locationandcompass.viewmodel.LocationRecordingViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionCountViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionIdViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionListViewModel
+import com.example.locationandcompass.viewmodel.LocationSessionViewModel
 import com.example.locationandcompass.viewmodel.PressureViewModel
 import com.example.locationandcompass.viewmodel.StepRecordingViewModel
 import com.example.locationandcompass.viewmodel.StepSessionCountViewModel
@@ -126,16 +135,25 @@ fun OverviewScreen(
     gPSAltitudeViewModel: GPSAltitudeViewModel,
     gPSAltitudeSessionDao: GPSAltitudeSessionDao,
     gPSAltitudeSessionIdViewModel: GPSAltitudeSessionIdViewModel,
-    gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel
-) {
+    gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel,
+    locationListViewModel: LocationListViewModel,
+    locationRecordingViewModel: LocationRecordingViewModel,
+    locationSessionIdViewModel: LocationSessionIdViewModel,
+    locationSessionDao: LocationSessionDao,
+    locationSessionListViewModel: LocationSessionListViewModel,
+    locationSampleDao: LocationSampleDao,
+    locationSessionCountViewModel: LocationSessionCountViewModel
+    ) {
     var sunMoonOctant by remember { mutableStateOf("-") }
     var compassOctant by remember { mutableStateOf("-") }
     var location1 by remember { mutableStateOf(Location("")) }
     //val stepRowCount by stepCountViewModel.rowCount.collectAsState(initial = 0)
     val stepSessionRowCount by stepSessionCountViewModel.rowCount.collectAsState(initial = 0)
     val altitudeSessionRowCount by altitudeSessionCountViewModel.rowCount.collectAsState(initial = 0)
+    val locationSessionRowCount by locationSessionCountViewModel.rowCount.collectAsState(initial = 0)
     val stepSessionList by stepSessionListViewModel.rowList.collectAsState(initial = emptyList())
     val altitudeSessionList by altitudeSessionListViewModel.rowList.collectAsState(initial = emptyList())
+    val locationSessionList by locationSessionListViewModel.rowList.collectAsState(initial = emptyList())
     //var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     //val stepSessionId by remember { mutableLongStateOf(stepSessionIdViewModel.stepSessionId) }
@@ -183,7 +201,8 @@ fun OverviewScreen(
         },
         sheetContent = {
             Column {
-                if (stepSessionRowCount != 0) {
+                // step profiles
+                /*if (stepSessionRowCount != 0) {
                     Text(
                         text = "Step Profiles",
                         style = MaterialTheme.typography.titleMedium
@@ -254,7 +273,8 @@ fun OverviewScreen(
                             }
                         }
                     }
-                }
+                }*/
+                // altitude profiles
                 if (altitudeSessionRowCount != 0) {
                     Text(
                         text = "Altitude Profiles",
@@ -327,6 +347,79 @@ fun OverviewScreen(
                         }
                     }
                 }
+                // distance profiles
+                if (locationSessionRowCount != 0) {
+                    Text(
+                        text = "Distance Profiles",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                LazyColumn {
+                    items(
+                        items = locationSessionList,
+                        key = { it.sessionId }
+                    ) { item ->
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            initialValue = SwipeToDismissBoxValue.Settled,
+                            positionalThreshold = { totalDistance ->
+                                totalDistance * 0.75f
+                            }
+                        )
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromEndToStart = false,
+                            backgroundContent = {
+                            },
+                            onDismiss = {
+                                val serviceScope =
+                                    CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                                serviceScope.launch {
+                                    try {
+                                        locationSampleDao.deleteBySessionId(item.sessionId)
+                                        locationSessionDao.deleteBySessionId(item.sessionId)
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            "Location and Compass",
+                                            "location delete failed",
+                                            e
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            val formatted = java.time.Instant.ofEpochMilli(item.startTime)
+                                .atZone(ZoneId.systemDefault())
+                                .format(DateTimeFormatter.ofPattern("MMM d, h.mm a"))
+                            Row(
+                                modifier = Modifier
+                                    .clickable {
+                                        locationSessionIdViewModel.setSessionId(item.sessionId)
+                                        navController.navigate("distance_profile_viewing")
+                                    }
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    //modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    Text(formatted)
+                                }
+                                /*Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Button(
+                                        onClick = {
+                                        }
+                                    ) {
+                                        Text("Delete")
+                                    }
+                                }*/
+                            }
+                        }
+                    }
+                }
             }
         }
         // main screen
@@ -372,19 +465,20 @@ fun OverviewScreen(
                                             CoroutineScope(SupervisorJob() + Dispatchers.IO)
                                         serviceScope.launch {
                                             try {
-                                                val sessionId = stepSessionDao.insert(
-                                                    StepSession(
+                                                val sessionId = locationSessionDao.insert(
+                                                    LocationSession(
                                                         startTime = System.currentTimeMillis(),
                                                         endTime = 0L
                                                     )
                                                 )
-                                                stepSessionIdViewModel.setSessionId(sessionId)
+                                                locationSessionIdViewModel.setSessionId(sessionId)
                                             } catch (e: Exception) {
                                                 Log.e("Location and Compass", "insert failed", e)
                                             }
                                         }
-                                        stepRecordingViewModel.updateRecording(true)
-                                        navController.navigate("steps_profile_recording")
+                                        locationRecordingViewModel.updateRecording(
+                                            MainActivity.Recording.STARTING.ordinal)
+                                        navController.navigate("distance_profile_recording")
                                     },
                                 text = s, //vmSteps.toInt().toString(),
                                 maxLines = 1,

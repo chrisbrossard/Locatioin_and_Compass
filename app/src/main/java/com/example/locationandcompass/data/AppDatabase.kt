@@ -1,33 +1,32 @@
 package com.example.locationandcompass.data
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.locationandcompass.viewmodel.GPSAltitudeSessionDao
-import com.example.locationandcompass.data.AltitudeSample
-import com.example.locationandcompass.data.StepSample
-import com.example.locationandcompass.data.StepSampleDao
-import java.util.concurrent.Executors
 
 @Database(
     entities = [
         StepSample::class,
         AltitudeSample::class,
         GPSAltitudeSample::class,
+        LocationSample::class,
         StepSession::class,
         AltitudeSession::class,
-        GPSAltitudeSession::class],
+        GPSAltitudeSession::class,
+        LocationSession::class],
     version = 1
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun stepSampleDao(): StepSampleDao
     abstract fun altitudeSampleDao(): AltitudeSampleDao
     abstract fun gPSAltitudeSampleDao(): GPSAltitudeSampleDao
+    abstract fun locationSampleDao(): LocationSampleDao
     abstract fun stepSessionDao(): StepSessionDao
     abstract fun altitudeSessionDao(): AltitudeSessionDao
     abstract fun gPSAltitudeSessionDao(): GPSAltitudeSessionDao
+    abstract fun locationSessionDao(): LocationSessionDao
 
     companion object {
         @Volatile

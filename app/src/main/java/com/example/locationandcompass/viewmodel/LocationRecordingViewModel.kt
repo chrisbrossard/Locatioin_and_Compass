@@ -7,21 +7,22 @@ import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import com.example.locationandcompass.MainActivity
 
-class StepRecordingViewModel(private val application: Application) : ViewModel() {
+class LocationRecordingViewModel(private val application: Application) : ViewModel() {
     private val sharedPreferences: SharedPreferences =
         application.getSharedPreferences("my_app", Context.MODE_PRIVATE)
-    var recording = sharedPreferences.getInt("step_recording",
+    var recording = sharedPreferences.getInt("location_recording",
         MainActivity.Recording.OFF.ordinal)
     init {
         sharedPreferences.edit {
-            putInt("step_recording", MainActivity.Recording.OFF.ordinal)
+            putInt("location_recording", MainActivity.Recording.OFF.ordinal)
         }
     }
+
     fun updateRecording(value: Int) {
         val sharedPreferences: SharedPreferences =
             application.getSharedPreferences("my_app", Context.MODE_PRIVATE)
         sharedPreferences.edit {
-            putInt("step_recording", value)
+            putInt("location_recording", value)
         }
     }
 }
