@@ -47,6 +47,10 @@ import com.example.locationandcompass.viewmodel.StepListViewModel
 import com.example.locationandcompass.viewmodel.StepViewModel
 import com.example.locationandcompass.viewmodel.VerticalSpeedViewModel
 import com.example.locationandcompass.viewmodel.DistanceViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeListViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeRecordingViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeSessionDao
+import com.example.locationandcompass.viewmodel.GPSAltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.GPSAltitudeViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import kotlin.time.ExperimentalTime
@@ -90,7 +94,11 @@ fun Navigation(
     verticalSpeedViewModel: VerticalSpeedViewModel,
     pressureViewModel: PressureViewModel,
     distanceViewModel: DistanceViewModel,
-    gPSAltitudeViewModel: GPSAltitudeViewModel
+    gPSAltitudeViewModel: GPSAltitudeViewModel,
+    gPSAltitudeSessionDao: GPSAltitudeSessionDao,
+    gPSAltitudeSessionIdViewModel: GPSAltitudeSessionIdViewModel,
+    gPSAltitudeListViewModel: GPSAltitudeListViewModel,
+    gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel
 ) {
     var location1 by remember { mutableStateOf(Location("")) }
 
@@ -143,7 +151,10 @@ fun Navigation(
                 verticalSpeedViewModel = verticalSpeedViewModel,
                 pressureViewModel = pressureViewModel,
                 distanceViewModel = distanceViewModel,
-                gPSAltitudeViewModel = gPSAltitudeViewModel
+                gPSAltitudeViewModel = gPSAltitudeViewModel,
+                gPSAltitudeSessionDao,
+                gPSAltitudeSessionIdViewModel,
+                gPSAltitudeRecordingViewModel
             )
         }
         composable("sun_moon") {
@@ -170,13 +181,18 @@ fun Navigation(
                 altitudeRecordingViewModel,
                 navController,
                 altitudeSessionIdViewModel,
+                gPSAltitudeListViewModel = gPSAltitudeListViewModel,
+                gPSAltitudeSessionIdViewModel,
+                gPSAltitudeRecordingViewModel
             )
         }
         composable("altitude_profile_viewing") {
             AltitudeProfileViewingScreen(
                 //sampledAltitudes,
                 altitudeListViewModel,
-                altitudeSessionIdViewModel
+                altitudeSessionIdViewModel,
+                gPSAltitudeListViewModel,
+                gPSAltitudeSessionIdViewModel
             )
         }
         composable("steps_profile_recording") {

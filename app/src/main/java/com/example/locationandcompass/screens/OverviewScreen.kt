@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +19,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
@@ -43,10 +41,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.locationandcompass.viewmodel.GPSAltitudeSessionDao
+import com.example.locationandcompass.viewmodel.GPSAltitudeSessionIdViewModel
 import com.example.locationandcompass.MainActivity
 import com.example.locationandcompass.data.AltitudeSampleDao
 import com.example.locationandcompass.data.AltitudeSession
 import com.example.locationandcompass.data.AltitudeSessionDao
+import com.example.locationandcompass.data.GPSAltitudeSession
 import com.example.locationandcompass.data.StepSampleDao
 import com.example.locationandcompass.data.StepSession
 import com.example.locationandcompass.data.StepSessionDao
@@ -58,6 +59,7 @@ import com.example.locationandcompass.viewmodel.AltitudeSessionCountViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionListViewModel
 import com.example.locationandcompass.viewmodel.DistanceViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.GPSAltitudeViewModel
 import com.example.locationandcompass.viewmodel.HeadingViewModel
 import com.example.locationandcompass.viewmodel.PressureViewModel
@@ -121,7 +123,10 @@ fun OverviewScreen(
     verticalSpeedViewModel: VerticalSpeedViewModel,
     pressureViewModel: PressureViewModel,
     distanceViewModel: DistanceViewModel,
-    gPSAltitudeViewModel: GPSAltitudeViewModel
+    gPSAltitudeViewModel: GPSAltitudeViewModel,
+    gPSAltitudeSessionDao: GPSAltitudeSessionDao,
+    gPSAltitudeSessionIdViewModel: GPSAltitudeSessionIdViewModel,
+    gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel
 ) {
     var sunMoonOctant by remember { mutableStateOf("-") }
     var compassOctant by remember { mutableStateOf("-") }
@@ -140,7 +145,7 @@ fun OverviewScreen(
     //val scope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
     val heading by headingViewModel.heading.collectAsState()
-    val vmSteps by stepViewModel.steps.collectAsState()
+    //val vmSteps by stepViewModel.steps.collectAsState()
     val verticalSpeed by verticalSpeedViewModel
         .verticalSpeed.collectAsState()
     val vmPressure by pressureViewModel.pressure.collectAsState()
@@ -322,54 +327,6 @@ fun OverviewScreen(
                         }
                     }
                 }
-                /*LazyColumn {
-                    items(altitudeSessionList) { item ->
-                        val formatted = java.time.Instant.ofEpochMilli(item.startTime)
-                            .atZone(ZoneId.systemDefault())
-                            .format(DateTimeFormatter.ofPattern("MMM d, h.mm a"))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    altitudeSessionIdViewModel.setSessionId(item.sessionId)
-                                    navController.navigate("altitude_profile_viewing")
-                                },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxHeight(),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Text(
-                                    modifier = Modifier,
-                                    text = formatted,
-                                )
-                            }
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.CenterEnd
-                            ) {
-                                Button(
-                                    onClick = {
-                                        val serviceScope =
-                                            CoroutineScope(SupervisorJob() + Dispatchers.IO)
-                                        serviceScope.launch {
-                                            try {
-                                                altitudeSampleDao.deleteBySessionId(item.sessionId)
-                                                altitudeSessionDao.deleteBySessionId(item.sessionId)
-                                            } catch (e: Exception) {
-                                                Log.e("Location and Compass", "altitude delete failed", e)
-                                            }
-                                        }
-                                    }
-                                ) {
-                                    Text("Delete")
-                                }
-                            }
-                        }
-                    }
-                }*/
             }
         }
         // main screen
@@ -379,12 +336,12 @@ fun OverviewScreen(
             // first row
             Box(
                 modifier = Modifier
-                    .weight(0.3f)
+                    .weight(0.5f)
                     .background(grey),
                 contentAlignment = Alignment.Center
             ) {
                 Row {
-                    // steps
+                    // distance
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -405,6 +362,9 @@ fun OverviewScreen(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            //val s = String.format(Locale.US, "%.1fk", vmSteps / 1000)
+                            val s = String.format(Locale.US, "%.1f",
+                                distance / 1000)
                             BasicText(
                                 modifier = Modifier
                                     .clickable {
@@ -426,12 +386,13 @@ fun OverviewScreen(
                                         stepRecordingViewModel.updateRecording(true)
                                         navController.navigate("steps_profile_recording")
                                     },
-                                text = vmSteps.toInt().toString(),
+                                text = s, //vmSteps.toInt().toString(),
                                 maxLines = 1,
                                 autoSize = TextAutoSize.StepBased(),
                             )
-                            Text("Steps")
+                            //Text("Steps")
                             //Text("Tap to Record")
+                            Text("Distance km")
                         }
                     }
                     // vertical speed
@@ -477,13 +438,13 @@ fun OverviewScreen(
             // second row
             Box(
                 modifier = Modifier
-                    .weight(0.3f)
+                    .weight(0.5f)
                     .background(grey)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Row {
-                    // Altitude
+                    // Altitudes
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -509,37 +470,69 @@ fun OverviewScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             BasicText(
-                                modifier = Modifier.clickable {
-                                    val serviceScope =
-                                        CoroutineScope(SupervisorJob() + Dispatchers.IO)
-                                    serviceScope.launch {
-                                        try {
-                                            val id = altitudeSessionDao.insert(
-                                                AltitudeSession(
-                                                    //sessionId = altitudeSessionId,
-                                                    startTime = System.currentTimeMillis(),
-                                                    endTime = 0L
+                                modifier = Modifier
+                                    .weight(1.0f)
+                                    .clickable {
+                                        val serviceScope =
+                                            CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                                        serviceScope.launch {
+                                            try {
+                                                val id = altitudeSessionDao.insert(
+                                                    AltitudeSession(
+                                                        //sessionId = altitudeSessionId,
+                                                        startTime = System.currentTimeMillis(),
+                                                        endTime = 0L
+                                                    )
                                                 )
-                                            )
-                                            altitudeSessionIdViewModel.setSessionId(id)
-                                        } catch (e: Exception) {
-                                            Log.e(
-                                                "Location and Compass",
-                                                "altitude session insert failed",
-                                                e
-                                            )
+                                                altitudeSessionIdViewModel.setSessionId(id)
+                                            } catch (e: Exception) {
+                                                Log.e(
+                                                    "Location and Compass",
+                                                    "altitude session insert failed",
+                                                    e
+                                                )
+                                            }
+                                            try {
+                                                val id = gPSAltitudeSessionDao.insert(
+                                                    GPSAltitudeSession(
+                                                        //sessionId = altitudeSessionId,
+                                                        startTime = System.currentTimeMillis(),
+                                                        endTime = 0L
+                                                    )
+                                                )
+                                                gPSAltitudeSessionIdViewModel.setSessionId(id)
+                                            } catch (e: Exception) {
+                                                Log.e(
+                                                    "Location and Compass",
+                                                    "GPS altitude session insert failed",
+                                                    e
+                                                )
+                                            }
                                         }
-                                    }
-                                    onNavigateToAltitudeRecording()
-                                    //navController.navigate("altitude_profile_recording")
-                                    altitudeRecordingViewModel.updateRecording(
-                                        MainActivity.Recording.STARTING.ordinal)
-                                },
+                                        onNavigateToAltitudeRecording()
+                                        //navController.navigate("altitude_profile_recording")
+                                        altitudeRecordingViewModel.updateRecording(
+                                            MainActivity.Recording.STARTING.ordinal
+                                        )
+                                        gPSAltitudeRecordingViewModel.updateRecording(
+                                            MainActivity.Recording.STARTING.ordinal
+                                        )
+                                    },
                                 text = a.roundToInt().toString(),
-                                //maxLines = 1,
+                                maxLines = 1,
                                 autoSize = TextAutoSize.StepBased()
                             )
-                            Text("Baro Altitude m")
+                            BasicText(
+                                modifier = Modifier
+                                    .clickable {
+                                    //navController.navigate("sun_moon")
+                                }
+                                    .weight(1.0f),
+                                text = gPSAltitude.toInt().toString(),
+                                maxLines = 1,
+                                autoSize = TextAutoSize.StepBased()
+                            )
+                            Text("Baro/GPS Altitude m")
                             //Text("Tap to Record")
                         }
                     }
@@ -626,7 +619,7 @@ fun OverviewScreen(
                 }
             }
             // third row
-            Box(
+            /*Box(
                 modifier = Modifier
                     .weight(0.3f)
                     .background(Color.Transparent)
@@ -654,14 +647,16 @@ fun OverviewScreen(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            val s = String.format(Locale.US, "%.1f",
+                                distance / 1000)
                             BasicText(
                                 modifier = Modifier.clickable {
                                     //navController.navigate("compass")
                                 },
-                                text = distance.toInt().toString(),
+                                text = s, //distance.toInt().toString(),
                                 autoSize = TextAutoSize.StepBased()
                             )
-                            Text("GPS Distance m")
+                            Text("GPS Distance km")
                         }
                     }
                     Box(
@@ -695,11 +690,11 @@ fun OverviewScreen(
                         }
                     }
                 }
-            }
+            }*/
             // Fourth Row
             Box(
                 modifier = Modifier
-                    .weight(0.5f)
+                    .weight(1.0f)
                     .background(grey)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center

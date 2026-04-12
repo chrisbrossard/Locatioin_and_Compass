@@ -6,15 +6,16 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import com.example.locationandcompass.MainActivity
-import com.example.locationandcompass.MainActivity.Recording
 
-class AltitudeRecordingViewModel(private val application: Application) : ViewModel() {
+class GPSAltitudeRecordingViewModel(private val application: Application) : ViewModel() {
     private val sharedPreferences: SharedPreferences =
         application.getSharedPreferences("my_app", Context.MODE_PRIVATE)
-    var recording = sharedPreferences.getInt("altitude_recording", Recording.OFF.ordinal)
+    var recording = sharedPreferences.getInt(
+        "gps_altitude_recording",
+        MainActivity.Recording.OFF.ordinal)
     init {
         sharedPreferences.edit {
-            putInt("altitude_recording", MainActivity.Recording.OFF.ordinal)
+            putInt("gps_altitude_recording", MainActivity.Recording.OFF.ordinal)
         }
     }
 
@@ -22,7 +23,7 @@ class AltitudeRecordingViewModel(private val application: Application) : ViewMod
         val sharedPreferences: SharedPreferences =
             application.getSharedPreferences("my_app", Context.MODE_PRIVATE)
         sharedPreferences.edit {
-            putInt("altitude_recording", value)
+            putInt("gps_altitude_recording", value)
         }
     }
 }

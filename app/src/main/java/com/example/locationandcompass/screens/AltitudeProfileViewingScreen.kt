@@ -1,5 +1,6 @@
 package com.example.locationandcompass.screens
 
+import android.graphics.Color
 import android.graphics.Typeface
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.locationandcompass.viewmodel.AltitudeListViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeListViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeSessionIdViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.data.Entry
@@ -23,10 +26,15 @@ import com.github.mikephil.charting.data.LineDataSet
 fun AltitudeProfileViewingScreen(
     //altitudes: ArrayDeque<Int>,
     altitudeListViewModel: AltitudeListViewModel,
-    altitudeSessionIdViewModel: AltitudeSessionIdViewModel
+    altitudeSessionIdViewModel: AltitudeSessionIdViewModel,
+    gPSAltitudeListViewModel: GPSAltitudeListViewModel,
+    gPSAltitudeSessionIdViewModel: GPSAltitudeSessionIdViewModel
 ) {
     val rowList by altitudeListViewModel.rowList.collectAsState(initial = emptyList())
+    val gPSRowList by gPSAltitudeListViewModel.rowList.collectAsState(initial = emptyList())
     val sessionId = altitudeSessionIdViewModel.getSessionId()
+    val gPSSessionId = gPSAltitudeSessionIdViewModel.getSessionId()
+
     //val altitudeViewModel: AltitudeViewModel = viewModel()
 
     Column {
@@ -48,20 +56,27 @@ fun AltitudeProfileViewingScreen(
                 },
                 update = { chart ->
                     //if (altitudes.isNotEmpty()) {
-                    val entries = ArrayList<Entry>()
+                    var entries = ArrayList<Entry>()
                     /*var index = 0f
                     for (value in altitudes) {
                         entries.add(Entry(index, value.toFloat()))
                         index++
                     }*/
-                    var flag = false
+                    var flag1 = false
                     for (sample in rowList) {
                         if (sessionId == sample.sessionId) {
-                            flag = true
+                            flag1 = true
                             break
                         }
                     }
-                    if (flag) {
+                    var flag2 = false
+                    for (sample in gPSRowList) {
+                        if (gPSSessionId == sample.sessionId) {
+                            flag2 = true
+                            break
+                        }
+                    }
+                    if (flag1 || flag2) {
                         for (sample in rowList) { //samples) {
                             val entry = Entry(sample.time.toFloat() / (1000 * 60),
                                 sample.altitude)
@@ -69,20 +84,43 @@ fun AltitudeProfileViewingScreen(
                                 entries.add(entry)
                             }
                         }
-                        val dataSet = LineDataSet(entries, "altitudes").apply {
+                        val dataSet1 = LineDataSet(entries, "baro altitudes").apply {
                         }
-                        chart.data = LineData(dataSet)
-                        dataSet.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
-                        dataSet.label = "Altitudes (m)"
-                        dataSet.setDrawFilled(true)
-                        dataSet.fillColor = 0x00FF00
-                        dataSet.fillAlpha = 128
-                        dataSet.setDrawCircles(false)
-                        dataSet.setDrawValues(false)
-                        chart.data = LineData(dataSet)
+                        //chart.data = LineData(dataSet)
+                        dataSet1.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
+                        dataSet1.label = "Baro Altitudes (m)"
+                        //dataSet.setDrawFilled(true)
+                        //dataSet.fillColor = 0x00FF00
+                        //dataSet.fillAlpha = 128
+                        dataSet1.lineWidth = 4.0f
+                        dataSet1.setDrawCircles(false)
+                        dataSet1.setDrawValues(false)
+
+                        entries = ArrayList()
+                        for (sample in gPSRowList) { //samples) {
+                            val entry = Entry(sample.time.toFloat() / (1000 * 60),
+                                sample.altitude)
+                            if (sample.sessionId == gPSSessionId) {
+                                entries.add(entry)
+                            }
+                        }
+                        val dataSet2 = LineDataSet(entries, "gps_altitudes").apply {
+                        }
+                        //chart.data = LineData(dataSet)
+                        dataSet2.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
+                        dataSet2.label = "GPS Altitudes (m)"
+                        //dataSet.setDrawFilled(true)
+                        //dataSet.fillColor = 0x00FF00
+                        //dataSet.fillAlpha = 128
+                        dataSet2.setColor(Color.MAGENTA)
+                        dataSet2.lineWidth = 4.0f
+                        dataSet2.setDrawCircles(false)
+                        dataSet2.setDrawValues(false)
+
+                        chart.data = LineData(dataSet1, dataSet2)
                         chart.setScaleEnabled(true)
                         val description = Description()
-                        description.text = "Altitude Profile"
+                        description.text = "Baro / GPS Altitude Profile"
                         chart.description = description
                         /*chart.zoom(
                             1 / altitudes.size.toFloat(),

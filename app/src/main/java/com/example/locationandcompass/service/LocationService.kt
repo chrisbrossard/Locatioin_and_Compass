@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.example.locationandcompass.MainActivity.Recording
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -83,10 +84,10 @@ class LocationService : Service() {
             .build()
         startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
 
-        val locationRequest = LocationRequest
+        /*val locationRequest = LocationRequest
             .Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L)
             .setMinUpdateIntervalMillis(5000)
-            .build()
+            .build()*/
 
         /*client.requestLocationUpdates(
             locationRequest,
@@ -94,21 +95,30 @@ class LocationService : Service() {
             Looper.getMainLooper()
         )*/
 
+
+
         serviceJob = CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
-                client.getCurrentLocation(
-                    Priority.PRIORITY_HIGH_ACCURACY,
-                    CancellationTokenSource().token
-                ).addOnSuccessListener { location ->
-                    if (location != null) {
-                        val intent = Intent("com.example.compassandlocation.location")
-                        intent.putExtra("latitude", location.latitude)
-                        intent.putExtra("longitude", location.longitude)
-                        intent.putExtra("altitude", location.altitude)
-                        sendBroadcast(intent)
+                val sharedPreferences = getSharedPreferences("my_app", MODE_PRIVATE)
+                val recording = sharedPreferences.getInt(
+                    "gps_altitude_recording",
+                    -1
+                )
+                if (recording != Recording.OFF.ordinal) {
+                    client.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        CancellationTokenSource().token
+                    ).addOnSuccessListener { location ->
+                        if (location != null) {
+                            val intent = Intent("com.example.compassandlocation.location")
+                            intent.putExtra("latitude", location.latitude)
+                            intent.putExtra("longitude", location.longitude)
+                            intent.putExtra("altitude", location.altitude)
+                            sendBroadcast(intent)
+                        }
                     }
                 }
-                delay(10000)
+                delay(5000)
             }
         }
 

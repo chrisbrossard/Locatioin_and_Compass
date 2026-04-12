@@ -1,24 +1,25 @@
 package com.example.locationandcompass.screens
 
 import android.graphics.Typeface
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import com.example.locationandcompass.MainActivity
 import com.example.locationandcompass.viewmodel.AltitudeListViewModel
 import com.example.locationandcompass.viewmodel.AltitudeRecordingViewModel
 import com.example.locationandcompass.viewmodel.AltitudeSessionIdViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeListViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeRecordingViewModel
+import com.example.locationandcompass.viewmodel.GPSAltitudeSessionIdViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.data.Entry
@@ -32,16 +33,23 @@ fun AltitudeProfileRecordingScreen(
     altitudeListViewModel: AltitudeListViewModel,
     altitudeRecordingViewModel: AltitudeRecordingViewModel,
     navController: NavHostController,
-    altitudeSessionIdViewModel: AltitudeSessionIdViewModel
+    altitudeSessionIdViewModel: AltitudeSessionIdViewModel,
+    gPSAltitudeListViewModel: GPSAltitudeListViewModel,
+    gPSAltitudeSessionIdViewModel: GPSAltitudeSessionIdViewModel,
+    gPSAltitudeRecordingViewModel: GPSAltitudeRecordingViewModel
 ) {
     val rowList by altitudeListViewModel.rowList.collectAsState(initial = emptyList())
+    val gPSRowList by gPSAltitudeListViewModel.rowList.collectAsState(initial = emptyList())
     //var clickedText by remember { mutableStateOf("Stop Recording") }
     //val altitudeViewModel: AltitudeViewModel = viewModel()
     val sessionId = altitudeSessionIdViewModel.getSessionId()
+    val gPSSessionId = gPSAltitudeSessionIdViewModel.getSessionId()
 
     BackHandler(enabled = true) {
         //Log.d("Location and Compass", "Backhandler called")
         altitudeRecordingViewModel.updateRecording(MainActivity.Recording.OFF.ordinal)
+        gPSAltitudeRecordingViewModel.updateRecording(MainActivity.Recording.OFF.ordinal)
+
         navController.popBackStack("overview", false)
     }
 
@@ -76,20 +84,27 @@ fun AltitudeProfileRecordingScreen(
                 },
                 update = { chart ->
                     //if (altitudes.isNotEmpty()) {
-                    val entries = ArrayList<Entry>()
+                    var entries = ArrayList<Entry>()
                     /*var index = 0f
                         for (value in altitudes) {
                             entries.add(Entry(index, value.toFloat()))
                             index++
                         }*/
-                    var flag = false
+                    var flag1 = false
                     for (sample in rowList) {
                         if (sessionId == sample.sessionId) {
-                            flag = true
+                            flag1 = true
                             break
                         }
                     }
-                    if (flag) {
+                    var flag2 = false
+                    for (sample in gPSRowList) {
+                        if (sessionId == sample.sessionId) {
+                            flag2 = true
+                            break
+                        }
+                    }
+                    if (flag1 || flag2) {
                         for (sample in rowList) { //samples) {
                             val entry = Entry(
                                 sample.time.toFloat() / (1000 * 60),
@@ -100,20 +115,46 @@ fun AltitudeProfileRecordingScreen(
                             }
                         }
                         //entries.sortedBy { it.x }
-                        val dataSet = LineDataSet(entries, "altitudes").apply {
+                        val dataSet1 = LineDataSet(entries, "altitudes").apply {
                         }
-                        chart.data = LineData(dataSet)
-                        dataSet.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
-                        dataSet.label = "Altitudes (m)"
-                        dataSet.setDrawFilled(true)
-                        dataSet.fillColor = 0x00FF00
-                        dataSet.fillAlpha = 128
-                        dataSet.setDrawCircles(false)
-                        dataSet.setDrawValues(false)
-                        chart.data = LineData(dataSet)
+                        //chart.data = LineData(dataSet)
+                        dataSet1.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
+                        dataSet1.label = "Baro Altitudes (m)"
+                        //dataSet.setDrawFilled(true)
+                        //dataSet.fillColor = 0x00FF00
+                        //dataSet.fillAlpha = 128
+                        dataSet1.lineWidth = 4.0f
+                        dataSet1.setDrawCircles(false)
+                        dataSet1.setDrawValues(false)
+
+                        entries = ArrayList()
+                        for (sample in gPSRowList) { //samples) {
+                            val entry = Entry(
+                                sample.time.toFloat() / (1000 * 60),
+                                sample.altitude
+                            )
+                            if (sample.sessionId == gPSSessionId) {
+                                entries.add(entry)
+                            }
+                        }
+                        //entries.sortedBy { it.x }
+                        val dataSet2 = LineDataSet(entries, "gps_altitudes").apply {
+                        }
+                        //chart.data = LineData(dataSet)
+                        dataSet2.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
+                        dataSet2.label = "GPS Altitudes (m)"
+                        //dataSet.setDrawFilled(true)
+                        //dataSet.fillColor = 0x00FF00
+                        //dataSet.fillAlpha = 128
+                        dataSet2.lineWidth = 4.0f
+                        dataSet2.setColor(Color.MAGENTA)
+                        dataSet2.setDrawCircles(false)
+                        dataSet2.setDrawValues(false)
+
+                        chart.data = LineData(dataSet1, dataSet2)
                         chart.setScaleEnabled(true)
                         val description = Description()
-                        description.text = "Altitude Profile"
+                        description.text = "Baro / GPS Altitude Profiles"
                         chart.description = description
                         /*chart.zoom(
                             1 / altitudes.size.toFloat(),

@@ -133,28 +133,19 @@ class AltitudeStepsService : Service(), SensorEventListener {
             if (recording == Recording.STARTING.ordinal) {
                 startTime = now
                 periodStartTime = now
+                createAltitudeSample(
+                    altitudeSampleDao,
+                    event.values[0],
+                    sessionId,
+                    0L)
             }
             if (now - periodStartTime > 5 * 1000) {
                 periodStartTime = now
-
-                val a = SensorManager.getAltitude(
-                    SensorManager.PRESSURE_STANDARD_ATMOSPHERE,
-                    event.values[0]
-                )
-                val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-                serviceScope.launch {
-                    try {
-                        altitudeSampleDao.insert(
-                            AltitudeSample(
-                                sessionId = sessionId,
-                                time = now - startTime,
-                                altitude = a
-                            )
-                        )
-                    } catch (e: Exception) {
-                        Log.e("Location and Compass", "altitude sample insert failed", e)
-                    }
-                }
+                createAltitudeSample(
+                    altitudeSampleDao,
+                    event.values[0],
+                    sessionId,
+                    now - startTime)
             }
             if (recording == Recording.STARTING.ordinal) {
                 sharedPreferences.edit {
@@ -168,6 +159,32 @@ class AltitudeStepsService : Service(), SensorEventListener {
         super.onDestroy()
         manager.cancel(notificationId)
         stopSelf()
+    }
+}
+
+fun createAltitudeSample(
+    altitudeSampleDao: AltitudeSampleDao,
+    pressure: Float,
+    sessionId: Long,
+    time: Long
+) {
+    val a = SensorManager.getAltitude(
+        SensorManager.PRESSURE_STANDARD_ATMOSPHERE,
+        pressure
+    )
+    val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    serviceScope.launch {
+        try {
+            altitudeSampleDao.insert(
+                AltitudeSample(
+                    sessionId = sessionId,
+                    time = time,
+                    altitude = a
+                )
+            )
+        } catch (e: Exception) {
+            Log.e("Location and Compass", "altitude sample insert failed", e)
+        }
     }
 }
 
