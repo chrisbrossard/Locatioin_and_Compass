@@ -2,11 +2,11 @@ This project is an Android application which displays information from various A
 
 The project was created to demonstrate some proficiency in Android programming, in particular experience with the Kotlin programming language, Compose, Room databases, view models, external library useage (Kastro and MPAndroidChart), and signal processing (moving average and linear regression)
 
-To view the source code or run the app, install Android Studio on your machine and download the app. Connect an Android device to your computer or create an Android Virtual Device. Then build and run the app. The app requires a pressure sensor on your device.
+To view the source code or run the app, install Android Studio on your machine and download the app. Connect an Android device to your computer or create an Android Virtual Device. Then build and run the app. The app requires an air pressure sensor on your device.
 
 The project is maintained by Chris Brossard.
 
-<img width="180" height="400" alt="Screenshot_20260406-110656" src="https://github.com/user-attachments/assets/b15f8a44-db7c-4965-8c95-64be66c6962e" />
+<img width="180" height="400" alt="Screenshot_20260410-143626" src="https://github.com/user-attachments/assets/25a5de15-631a-41f5-ab59-4d907bde3505" />
 
 <img width="180" height="400" alt="Screenshot_20260406-111224" src="https://github.com/user-attachments/assets/74687b62-fb8d-4e7a-80fe-0209de6e3d2f" />
 
