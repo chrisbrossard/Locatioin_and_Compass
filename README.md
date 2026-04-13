@@ -12,6 +12,8 @@ The project is maintained by Chris Brossard.
 
 <img width="180" height="400" alt="Screenshot_20260406-112301" src="https://github.com/user-attachments/assets/4af270b0-494b-4c97-a3d2-0c0f718d93f8" />
 
+<img width="180" height="400" alt="Screenshot_20260406-111612" src="https://github.com/user-attachments/assets/4867be10-86fa-497e-b17c-74183204e52e" />
+
 <img width="180" height="400" alt="Screenshot_20260412-172712" src="https://github.com/user-attachments/assets/22c1295a-75a7-417a-8340-c105f7869f61" />
 
 <img width="180" height="400" alt="Screenshot_20260406-112524" src="https://github.com/user-attachments/assets/9aa3f6c8-3e4f-4bd2-b8bf-87552d07d7b3" />
