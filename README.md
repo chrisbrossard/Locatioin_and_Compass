@@ -10,7 +10,7 @@ The project is maintained by Chris Brossard.
 
 <img width="180" height="400" alt="Screenshot_20260412-172353" src="https://github.com/user-attachments/assets/6d79fae1-3f70-4679-a13f-40dd96bc8ed1" />
 
-<img width="180" height="400" alt="Screenshot_20260406-112024" src="https://github.com/user-attachments/assets/0bc1ad41-222d-4dd4-861c-b7a852ee2b72" />
+<img width="180" height="400" alt="Screenshot_20260406-112301" src="https://github.com/user-attachments/assets/4af270b0-494b-4c97-a3d2-0c0f718d93f8" />
 
 <img width="180" height="400" alt="Screenshot_20260412-172712" src="https://github.com/user-attachments/assets/22c1295a-75a7-417a-8340-c105f7869f61" />
 
