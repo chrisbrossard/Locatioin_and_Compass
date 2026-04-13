@@ -17,6 +17,7 @@ import androidx.navigation.NavHostController
 import com.example.locationandcompass.MainActivity
 import com.example.locationandcompass.viewmodel.LocationListViewModel
 import com.example.locationandcompass.viewmodel.LocationRecordingViewModel
+import com.example.locationandcompass.viewmodel.LocationSampleViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionIdViewModel
 import com.example.locationandcompass.viewmodel.StepRecordingViewModel
 import com.example.locationandcompass.viewmodel.StepListViewModel
@@ -26,6 +27,11 @@ import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.highlight.Highlight
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 
 //@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -37,7 +43,8 @@ fun DistanceProfileRecordingScreen(
     locationListViewModel: LocationListViewModel,
     locationRecordingViewModel: LocationRecordingViewModel,
     navController: NavHostController,
-    locationSessionIdViewModel: LocationSessionIdViewModel
+    locationSessionIdViewModel: LocationSessionIdViewModel,
+    locationSampleViewModel: LocationSampleViewModel
 ) {
     //val viewModel: MainActivity.StepListViewModel = viewModel()
     val rowList by locationListViewModel.rowList.collectAsState(initial = emptyList())
@@ -101,6 +108,7 @@ fun DistanceProfileRecordingScreen(
                         if (flag) {
                             var distance = 0f
                             var location = Location("")
+                            var index = 0
                             for (sample in rowList) { //samples) {
                                 val newLocation = Location("")
                                 newLocation.latitude = sample.latitude
@@ -109,18 +117,26 @@ fun DistanceProfileRecordingScreen(
                                     distance += location.distanceTo(newLocation)
                                 }
                                 location = newLocation
+                                val x = sample.time.toFloat() /
+                                        (MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE)
                                 val entry = Entry(
-                                    sample.time.toFloat() /
-                                            (MILLISECONDS_PER_SECOND * SECONDS_PER_MINUTE),
-                                    distance
+                                    x,
+                                    distance,
+                                    sample.locationId as Any
                                 )
+                                //entry.data = sample.locationId
                                 if (sessionId == sample.sessionId) {
                                     entries.add(entry)
+                                }
+                                val serviceScope =
+                                    CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                                serviceScope.launch {
+                                    locationSampleViewModel.setX(sample.locationId, x)
                                 }
                             }
                             val dataSet = LineDataSet(entries, "set").apply {
                             }
-                            dataSet.mode = LineDataSet.Mode.LINEAR
+                            dataSet.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
                             dataSet.label = "distance m"
                             //dataSet.setDrawFilled(true)
                             //dataSet.fillColor = 0x964B00
@@ -128,6 +144,12 @@ fun DistanceProfileRecordingScreen(
                             dataSet.setDrawCircles(false)
                             dataSet.setDrawValues(false)
                             dataSet.lineWidth = 4.0f
+
+                            /*val highlight = Highlight(
+                                0f,
+                                0f,
+                                0)
+                            chart.highlightValue(highlight)*/
                             chart.data = LineData(dataSet)
                             chart.setScaleEnabled(true)
                             val description = Description()

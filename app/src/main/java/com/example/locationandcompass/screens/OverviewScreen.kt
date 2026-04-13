@@ -52,7 +52,6 @@ import com.example.locationandcompass.data.LocationSampleDao
 import com.example.locationandcompass.data.LocationSession
 import com.example.locationandcompass.data.LocationSessionDao
 import com.example.locationandcompass.data.StepSampleDao
-import com.example.locationandcompass.data.StepSession
 import com.example.locationandcompass.data.StepSessionDao
 import com.example.locationandcompass.requestCurrentLocation
 import com.example.locationandcompass.viewmodel.AltitudeDeleteViewModel
@@ -70,7 +69,7 @@ import com.example.locationandcompass.viewmodel.LocationRecordingViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionCountViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionIdViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionListViewModel
-import com.example.locationandcompass.viewmodel.LocationSessionViewModel
+import com.example.locationandcompass.viewmodel.NavigationViewModel
 import com.example.locationandcompass.viewmodel.PressureViewModel
 import com.example.locationandcompass.viewmodel.StepRecordingViewModel
 import com.example.locationandcompass.viewmodel.StepSessionCountViewModel
@@ -142,16 +141,17 @@ fun OverviewScreen(
     locationSessionDao: LocationSessionDao,
     locationSessionListViewModel: LocationSessionListViewModel,
     locationSampleDao: LocationSampleDao,
-    locationSessionCountViewModel: LocationSessionCountViewModel
+    locationSessionCountViewModel: LocationSessionCountViewModel,
+    navigationViewModel: NavigationViewModel
     ) {
     var sunMoonOctant by remember { mutableStateOf("-") }
     var compassOctant by remember { mutableStateOf("-") }
     var location1 by remember { mutableStateOf(Location("")) }
     //val stepRowCount by stepCountViewModel.rowCount.collectAsState(initial = 0)
-    val stepSessionRowCount by stepSessionCountViewModel.rowCount.collectAsState(initial = 0)
+    //val stepSessionRowCount by stepSessionCountViewModel.rowCount.collectAsState(initial = 0)
     val altitudeSessionRowCount by altitudeSessionCountViewModel.rowCount.collectAsState(initial = 0)
     val locationSessionRowCount by locationSessionCountViewModel.rowCount.collectAsState(initial = 0)
-    val stepSessionList by stepSessionListViewModel.rowList.collectAsState(initial = emptyList())
+    //val stepSessionList by stepSessionListViewModel.rowList.collectAsState(initial = emptyList())
     val altitudeSessionList by altitudeSessionListViewModel.rowList.collectAsState(initial = emptyList())
     val locationSessionList by locationSessionListViewModel.rowList.collectAsState(initial = emptyList())
     //var showBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -164,8 +164,7 @@ fun OverviewScreen(
     val scaffoldState = rememberBottomSheetScaffoldState()
     val heading by headingViewModel.heading.collectAsState()
     //val vmSteps by stepViewModel.steps.collectAsState()
-    val verticalSpeed by verticalSpeedViewModel
-        .verticalSpeed.collectAsState()
+    val verticalSpeed by verticalSpeedViewModel.verticalSpeed.collectAsState()
     val vmPressure by pressureViewModel.pressure.collectAsState()
     val distance by distanceViewModel.distance.collectAsState()
     val gPSAltitude by gPSAltitudeViewModel.altitude.collectAsState()
@@ -901,6 +900,39 @@ fun OverviewScreen(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    if (navigationViewModel.navigating) {
+                        val distance = location1.distanceTo(navigationViewModel.getWaypoint())
+                        if (distance < 1f) {
+                            navigationViewModel.navigating = false
+                        } else {
+                            val bearing = location1.bearingTo(navigationViewModel.getWaypoint())
+                            var s = ""
+                            when (bearing) {
+                                in 0f..22.5f -> {
+                                    s = "Waypoint straight ahead"
+                                }
+                                in 22.5f..67.5f -> {
+                                    s = "Waypoint slightly right"
+                                }
+                                in 67.5f..112.5f -> {
+                                    s = "Waypoint to the right"
+                                }
+                                in 112.5f..247.5f -> {
+                                    s = "Waypoint behind you"
+                                }
+                                in 247.5f..292.5f -> {
+                                    s = "Waypoint to your left"
+                                }
+                                in 292.5f..337.5f -> {
+                                    s = "Waypoint slightly left"
+                                }
+                                in 337.5f..360f -> {
+                                    s = "Waypoint straight ahead"
+                                }
+                            }
+                            Text(s)
+                        }
+                    }
                     BasicText(
                         modifier = Modifier.clickable {
                             navController.navigate("compass")

@@ -15,6 +15,12 @@ interface LocationSampleDao {
     @Query("SELECT * FROM locations WHERE locationId = (:locationSampleId)")
     fun findById(locationSampleId: Int): LocationSample
 
+    @Query("UPDATE locations SET x = (:x) WHERE locationId = (:locationSampleId)")
+    fun updateX(locationSampleId: Int, x: Float)
+
+    @Query("SELECT * FROM locations WHERE x = (:x)")
+    fun findByX(x: Float): LocationSample
+
     @Query("SELECT * FROM locations ORDER BY time")
     fun getAll(): Flow<List<LocationSample>>
 

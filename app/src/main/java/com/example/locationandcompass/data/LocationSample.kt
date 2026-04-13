@@ -24,5 +24,6 @@ data class LocationSample(
     @ColumnInfo(name = "sessionId") val sessionId: Long, // links to session table
     @ColumnInfo(name = "time") val time: Long,
     @ColumnInfo(name = "latitude") val latitude: Double,
-    @ColumnInfo(name = "longitude") val longitude: Double
+    @ColumnInfo(name = "longitude") val longitude: Double,
+    @ColumnInfo(name = "x") val x: Float
 )

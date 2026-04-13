@@ -58,9 +58,11 @@ import com.example.locationandcompass.viewmodel.GPSAltitudeSessionIdViewModel
 import com.example.locationandcompass.viewmodel.GPSAltitudeViewModel
 import com.example.locationandcompass.viewmodel.LocationListViewModel
 import com.example.locationandcompass.viewmodel.LocationRecordingViewModel
+import com.example.locationandcompass.viewmodel.LocationSampleViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionCountViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionIdViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionListViewModel
+import com.example.locationandcompass.viewmodel.NavigationViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import kotlin.time.ExperimentalTime
 
@@ -114,7 +116,9 @@ fun Navigation(
     locationSessionDao: LocationSessionDao,
     locationSessionListViewModel: LocationSessionListViewModel,
     locationSampleDao: LocationSampleDao,
-    locationSessionCountViewModel: LocationSessionCountViewModel
+    locationSessionCountViewModel: LocationSessionCountViewModel,
+    locationSampleViewModel: LocationSampleViewModel,
+    navigationViewModel: NavigationViewModel
     ) {
     var location1 by remember { mutableStateOf(Location("")) }
 
@@ -177,7 +181,8 @@ fun Navigation(
                 locationSessionDao,
                 locationSessionListViewModel,
                 locationSampleDao,
-                locationSessionCountViewModel
+                locationSessionCountViewModel,
+                navigationViewModel
             )
         }
         composable("sun_moon") {
@@ -247,7 +252,8 @@ fun Navigation(
                 locationListViewModel,
                 locationRecordingViewModel,
                 navController,
-                locationSessionIdViewModel
+                locationSessionIdViewModel,
+                locationSampleViewModel
             )
         }
         composable("distance_profile_viewing") {
@@ -257,7 +263,9 @@ fun Navigation(
                 //stepSampleDao,
                 locationListViewModel,
                 //stepRecordingViewModel,
-                locationSessionIdViewModel
+                locationSessionIdViewModel,
+                locationSampleViewModel,
+                navigationViewModel
             )
         }
         composable("vertical_speed") {

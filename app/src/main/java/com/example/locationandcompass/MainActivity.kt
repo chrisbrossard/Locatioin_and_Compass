@@ -84,9 +84,11 @@ import com.example.locationandcompass.data.LocationSampleDao
 import com.example.locationandcompass.data.LocationSessionDao
 import com.example.locationandcompass.viewmodel.LocationListViewModel
 import com.example.locationandcompass.viewmodel.LocationRecordingViewModel
+import com.example.locationandcompass.viewmodel.LocationSampleViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionCountViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionIdViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionListViewModel
+import com.example.locationandcompass.viewmodel.NavigationViewModel
 
 class MainActivity : ComponentActivity(), SensorEventListener {
     val fusedLocationProviderClient: FusedLocationProviderClient by lazy {
@@ -193,7 +195,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         locationSessionDao,
                         locationSessionListViewModel,
                         locationSampleDao,
-                        locationSessionCountViewModel
+                        locationSessionCountViewModel,
+                        locationSampleViewModel,
+                        navigationViewModel
                     )
                 }
             }
@@ -284,6 +288,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     lateinit var locationSessionIdViewModel: LocationSessionIdViewModel
     lateinit var locationSessionListViewModel: LocationSessionListViewModel
     lateinit var locationSessionCountViewModel: LocationSessionCountViewModel
+    lateinit var locationSampleViewModel: LocationSampleViewModel
+
+    lateinit var navigationViewModel: NavigationViewModel
 
     enum class Recording {
         OFF, STARTING, ON
@@ -361,7 +368,8 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                                 sessionId = locationSessionId,
                                 time = now - locationStartTime,
                                 latitude = location.latitude,
-                                longitude = location.longitude
+                                longitude = location.longitude,
+                                x = 0f
                             )
                         )
                     } catch (e: Exception) {
@@ -449,6 +457,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         locationSessionIdViewModel = LocationSessionIdViewModel(application)
         locationSessionListViewModel = LocationSessionListViewModel(locationSessionDao)
         locationSessionCountViewModel = LocationSessionCountViewModel(locationSessionDao)
+        locationSampleViewModel = LocationSampleViewModel(locationSampleDao)
+
+        navigationViewModel = NavigationViewModel()
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -555,7 +566,9 @@ class MainActivity : ComponentActivity(), SensorEventListener {
                         locationSessionDao,
                         locationSessionListViewModel,
                         locationSampleDao,
-                        locationSessionCountViewModel
+                        locationSessionCountViewModel,
+                        locationSampleViewModel,
+                        navigationViewModel
                     )
                 }
             }

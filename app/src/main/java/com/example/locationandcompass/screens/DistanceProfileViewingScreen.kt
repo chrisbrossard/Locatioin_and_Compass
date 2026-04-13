@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import android.location.Location
+import android.graphics.Color
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +18,9 @@ import androidx.navigation.NavHostController
 import com.example.locationandcompass.MainActivity
 import com.example.locationandcompass.viewmodel.LocationListViewModel
 import com.example.locationandcompass.viewmodel.LocationRecordingViewModel
+import com.example.locationandcompass.viewmodel.LocationSampleViewModel
 import com.example.locationandcompass.viewmodel.LocationSessionIdViewModel
+import com.example.locationandcompass.viewmodel.NavigationViewModel
 import com.example.locationandcompass.viewmodel.StepRecordingViewModel
 import com.example.locationandcompass.viewmodel.StepListViewModel
 import com.example.locationandcompass.viewmodel.StepSessionIdViewModel
@@ -26,6 +29,12 @@ import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 
 //@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -37,7 +46,9 @@ fun DistanceProfileViewingScreen(
     locationListViewModel: LocationListViewModel,
     //locationRecordingViewModel: LocationRecordingViewModel,
     //navController: NavHostController,
-    locationSessionIdViewModel: LocationSessionIdViewModel
+    locationSessionIdViewModel: LocationSessionIdViewModel,
+    locationSampleViewModel: LocationSampleViewModel,
+    navigationViewModel: NavigationViewModel
 ) {
     //val viewModel: MainActivity.StepListViewModel = viewModel()
     val rowList by locationListViewModel.rowList.collectAsState(initial = emptyList())
@@ -120,19 +131,44 @@ fun DistanceProfileViewingScreen(
                             }
                             val dataSet = LineDataSet(entries, "set").apply {
                             }
-                            dataSet.mode = LineDataSet.Mode.LINEAR
-                            dataSet.label = "locations"
+                            dataSet.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
+                            dataSet.label = "distance m"
                             //dataSet.setDrawFilled(true)
                             //dataSet.fillColor = 0x964B00
                             //dataSet.fillAlpha = 128
-                            dataSet.setDrawCircles(false)
+                            //dataSet.setDrawCircles(false)
                             dataSet.setDrawValues(false)
+                            dataSet.setCircleColor(Color.RED)
                             dataSet.lineWidth = 4.0f
                             chart.data = LineData(dataSet)
                             chart.setScaleEnabled(true)
                             val description = Description()
                             description.text = "Distance Profile"
                             chart.description = description
+                            chart.setOnChartValueSelectedListener(object: OnChartValueSelectedListener {
+                                override fun onValueSelected(e: Entry?, h: Highlight?) {
+                                    //var sampleId = 0
+                                    if (e != null) {
+                                        //sampleId = e.data as Int
+                                        val serviceScope =
+                                            CoroutineScope(SupervisorJob() + Dispatchers.IO)
+                                        serviceScope.launch {
+                                            val sample =
+                                                //locationSampleViewModel.getSample(sampleId)
+                                                locationSampleViewModel.findByX(e.x)
+                                            navigationViewModel.setWaypoint(
+                                                sample.latitude,
+                                                sample.longitude
+                                            )
+                                            navigationViewModel.navigating = true
+                                            //h?.dataIndex
+                                        }
+                                    }
+                                }
+
+                                override fun onNothingSelected() {
+                                }
+                            })
                             /*chart.zoom(
                             1 / stepsTimes.size.toFloat(),
                             1f,
