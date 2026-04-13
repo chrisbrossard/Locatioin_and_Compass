@@ -6,15 +6,13 @@ To view the source code or run the app, install Android Studio on your machine a
 
 The project is maintained by Chris Brossard.
 
-<img width="180" height="400" alt="Screenshot_20260410-143626" src="https://github.com/user-attachments/assets/25a5de15-631a-41f5-ab59-4d907bde3505" />
+<img width="180" height="400" alt="Screenshot_20260412-171924" src="https://github.com/user-attachments/assets/ae072092-a9ba-4f97-a350-f9d4f374f323" />
 
-<img width="180" height="400" alt="Screenshot_20260406-111224" src="https://github.com/user-attachments/assets/74687b62-fb8d-4e7a-80fe-0209de6e3d2f" />
-
-<img width="180" height="400" alt="Screenshot_20260406-111612" src="https://github.com/user-attachments/assets/a01d6a1c-445f-438c-b956-14d20a07ab2f" />
+<img width="180" height="400" alt="Screenshot_20260412-172353" src="https://github.com/user-attachments/assets/6d79fae1-3f70-4679-a13f-40dd96bc8ed1" />
 
 <img width="180" height="400" alt="Screenshot_20260406-112024" src="https://github.com/user-attachments/assets/0bc1ad41-222d-4dd4-861c-b7a852ee2b72" />
 
-<img width="180" height="400" alt="Screenshot_20260406-112301" src="https://github.com/user-attachments/assets/f8100629-01fb-435b-90a4-7bc3063cac42" />
+<img width="180" height="400" alt="Screenshot_20260412-172712" src="https://github.com/user-attachments/assets/22c1295a-75a7-417a-8340-c105f7869f61" />
 
 <img width="180" height="400" alt="Screenshot_20260406-112524" src="https://github.com/user-attachments/assets/9aa3f6c8-3e4f-4bd2-b8bf-87552d07d7b3" />
 
